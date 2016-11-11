@@ -1,6 +1,4 @@
-# comp_graph
-
-# Computer Graphics project.
+# Computer Graphics project
 
 ## Requirements
 + SDL2 v2.0.5
