@@ -11,9 +11,10 @@ class BMP
 private:
 	typedef unsigned short ushort;
 	typedef unsigned int uint;
-	std::fstream bmpin;		// fstream object for reading from image file
+	//	std::fstream bmpin;		// fstream object for reading from image file
+	FILE* bmp_file;		// fstream object for reading from image file
 	std::string filename;
-	#pragma pack(2)	// set struct alignment to 2 bytes
+	#pragma pack(2)	// set struct alignment to 2 bytes to force 54 bytes stuct size 
 	struct
 	{
 	// BMP File header part (14 bytes)
@@ -34,16 +35,16 @@ private:
 		int  biYPelsPerMeter;	// vertical resolution in pixels per meter (unreliable)
 		uint biClrUsed;			// number of colors in image, or zero
 		uint biClrImportant;	// number of important colors, or zero
-	} header, *pheader;			// header and header pointer
+	} header, *header_ptr;		// header and header pointer
 
 	void read_header();
 public:
 	BMP(std::string name);
 	~BMP();
-	inline int get_width() { return header.biWidth; }
-	inline int get_height() { return header.biHeight; }
-	void read_plxs(std::ostream& os);
-	void sdl_display();
+	int get_width() const { return header.biWidth; }
+	int get_height() const { return header.biHeight; }
+	void read_plxs(std::ostream& os) const;
+	void sdl_display() const;
 	friend std::ostream& operator<< (std::ostream& os, const BMP& obj);
 };
 

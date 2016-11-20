@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 		std::cout << pics[i];
 
 	std::fstream out("output.txt", std::ios_base::out | std::ios_base::trunc);
-	pics[2].read_plxs(out);
+//	pics[2].read_plxs(out);
 	pics[2].sdl_display();
 		
 	system("pause");
