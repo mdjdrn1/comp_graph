@@ -12,6 +12,8 @@
 output.txt
 /test_pics
 *_old.cpp
+*output*
+pack.cpp
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

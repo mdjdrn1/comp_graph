@@ -1,10 +1,7 @@
 #ifndef BMP_H
 #define BMP_H
 
-#include<string>
 #include<iostream>
-#include<fstream>
-#include "SDL.h"
 
 class BMP
 {
@@ -14,7 +11,7 @@ private:
 	//	std::fstream bmpin;		// fstream object for reading from image file
 	FILE* bmp_file;		// fstream object for reading from image file
 	std::string filename;
-	#pragma pack(2)	// set struct alignment to 2 bytes to force 54 bytes stuct size 
+	#pragma pack(push, 2)	// set struct alignment to 0 bytes to force 54 bytes stuct size 
 	struct
 	{
 	// BMP File header part (14 bytes)
@@ -36,7 +33,7 @@ private:
 		uint biClrUsed;			// number of colors in image, or zero
 		uint biClrImportant;	// number of important colors, or zero
 	} header, *header_ptr;		// header and header pointer
-
+	#pragma pack(pop)
 	void read_header();
 public:
 	BMP(std::string name);
@@ -44,6 +41,8 @@ public:
 	int get_width() const { return header.biWidth; }
 	int get_height() const { return header.biHeight; }
 	void read_plxs(std::ostream& os) const;
+	void convert_bmp_7();
+	void pack(uint8_t vals[8], FILE* fp);
 	void sdl_display() const;
 	friend std::ostream& operator<< (std::ostream& os, const BMP& obj);
 };
