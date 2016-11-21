@@ -41,7 +41,7 @@ public:
 	int get_width() const { return header.biWidth; }
 	int get_height() const { return header.biHeight; }
 	void read_plxs(std::ostream& os) const;
-	void convert_bmp_7();
+	void convert_bmp_to_7();
 	void pack(uint8_t vals[8], FILE* fp);
 	void sdl_display() const;
 	friend std::ostream& operator<< (std::ostream& os, const BMP& obj);

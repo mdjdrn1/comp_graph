@@ -51,23 +51,20 @@ void BMP::read_plxs(std::ostream& os) const
 /**
  * \brief Converting input 24-bit BMP file to reduced 24-bit file
  */
-void BMP::convert_bmp_7()
+void BMP::convert_bmp_to_7()
 {
-	// temporary 'creating' file if it didn't exist
-	std::fstream outcreate("output.bin", std::ios::trunc);
+	// (just temporary) creating file if it didn't exist (CHANGE THIS ASAP!)
+	std::fstream outcreate("output.bard", std::ios::trunc);
 	outcreate.close();
 
 	FILE* out;
 
-	fopen_s(&out, "output.bin", "wb+");
-	/*if(!fopen_s(&out, "output.bin", "wb+"))
+	if(fopen_s(&out, "output.bard", "wb+")==-1)
 	{
 		std::cerr << "opening failed.\n";
 		system("Pause");
 		exit(EXIT_FAILURE);
-	}*/
-
-	uint8_t RGB[8];
+	}
 
 	// start reading from 54 byte, as first 54 contain header info
 	fseek(bmp_file, 54, std::ios::beg);
@@ -76,21 +73,20 @@ void BMP::convert_bmp_7()
 	fread(data, data_size, 1, bmp_file);
 
 	uint i;
+	uint8_t RGB[8];
 	for (i = 0; i < data_size; ++i)
 	{
-		RGB[i%7] = static_cast<uint8_t>(data[i]);
-		
-		if (i!=0 && i % 7 == 0)
-		{
+		if (i != 0 && i % 8 == 0)
 			pack(RGB, out);
-		}
+		RGB[i % 8] = static_cast<uint8_t>(data[i]);
+		// TEST 
+		// std::cout << std::dec << i << ": " << std::hex << static_cast<int>(RGB[i % 8]) << std::endl;
 	}
-	/*
-	// TURNED OFF ON TESTS
+	
 	// latest bits, that didn't fill RGB array fully
-	if ((i-1) % 7 != 0)
+	if ((i-1) % 8 != 0)
 	{
-		i = i % 7;
+		i = i % 8;
 		while(i<8)
 		{
 			// fill with zeros remaining values
@@ -99,17 +95,24 @@ void BMP::convert_bmp_7()
 		}
 		// pack same as before (in a loop)
 		pack(RGB, out);
-	}*/
+	}
 	fclose(out);
 }
 
 /**
  * \brief Reducing every byte from 8-bits to 7-bits
- * \param vals 8-bytes array, which will be reduced to 7-bytes
+ * \param vals array of 8 uint8_t(8-bytes) elements, where every element will be reduced to 7-bytes
  * \param fp output file pointer
  */
 void BMP::pack(uint8_t vals[8], FILE* fp)
 {
+	// TESTS 
+	/*std::cout << "values in vals:\n";
+	for (int y = 0;y < 8;++y)
+	{
+		std::cout << std::dec << y << ": " << std::hex << static_cast<int>(vals[y]) << std::endl;
+	}
+	std::cout << std::endl;*/
 	uint8_t pack = 0x00;
 	uint8_t x, p;
 	bool bit = 1;
@@ -147,7 +150,6 @@ void BMP::read_header()
 
 std::ostream & operator<<(std::ostream & os, const BMP& obj)
 {
-	os << "sizeof(header): " << sizeof(obj.header) << std::endl;
 	os << "Width: " << obj.header.biWidth << std::endl;
 	os << "Height: " << obj.header.biHeight << std::endl;
 	os << "Size: " << static_cast<double>(obj.header.bfSize) / 1024 << "KB" << std::endl;
