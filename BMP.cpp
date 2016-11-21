@@ -34,10 +34,10 @@ void BMP::read_plxs(std::ostream& os) const
 {
 	// start reading from 54 byte, as first 54 contain header info
 	fseek(bmp_file, 54, std::ios::beg);
-	uint data_size = ((header.biWidth * 3 + 3) & (~3)) * header.biHeight;	//calculate data size with padding
-	unsigned char* data = new unsigned char[data_size];	// data buffer
+	uint data_size = ((header.biWidth * 3 + 3) & (~3)) * header.biHeight; //calculate data size with padding
+	unsigned char* data = new unsigned char[data_size]; // data buffer
 	fread(data, data_size, 1, bmp_file);
-	for (uint i = 0; i < data_size;i += 3)
+	for (uint i = 0; i < data_size; i += 3)
 	{
 		int bval = static_cast<int>(data[i]);
 		int gval = static_cast<int>(data[i + 1]);
@@ -47,19 +47,19 @@ void BMP::read_plxs(std::ostream& os) const
 	}
 }
 
-
 /**
  * \brief Converting input 24-bit BMP file to reduced 24-bit file
  */
 void BMP::convert_bmp_to_7()
 {
-	// (just temporary) creating file if it didn't exist (CHANGE THIS ASAP!)
+	// TODO: Change creating file
+	// (just temporary) creating file if it didn't exist
 	std::fstream outcreate("output.bard", std::ios::trunc);
 	outcreate.close();
 
 	FILE* out;
 
-	if(fopen_s(&out, "output.bard", "wb+")==-1)
+	if (fopen_s(&out, "output.bard", "wb+") == -1)
 	{
 		std::cerr << "opening failed.\n";
 		system("Pause");
@@ -68,8 +68,8 @@ void BMP::convert_bmp_to_7()
 
 	// start reading from 54 byte, as first 54 contain header info
 	fseek(bmp_file, 54, std::ios::beg);
-	uint data_size = ((header.biWidth * 3 + 3) & (~3)) * header.biHeight;	//calculate data size with padding
-	unsigned char* data = new unsigned char[data_size];	// data buffer
+	uint data_size = ((header.biWidth * 3 + 3) & (~3)) * header.biHeight; //calculate data size with padding
+	unsigned char* data = new unsigned char[data_size]; // data buffer
 	fread(data, data_size, 1, bmp_file);
 
 	uint i;
@@ -82,18 +82,19 @@ void BMP::convert_bmp_to_7()
 		// TEST 
 		// std::cout << std::dec << i << ": " << std::hex << static_cast<int>(RGB[i % 8]) << std::endl;
 	}
-	
+
 	// latest bits, that didn't fill RGB array fully
-	if ((i-1) % 8 != 0)
+	if ((i - 1) % 8 != 0)
 	{
 		i = i % 8;
-		while(i<8)
+		while (i < 8)
 		{
 			// fill with zeros remaining values
 			RGB[i] = 0;
 			++i;
 		}
 		// pack same as before (in a loop)
+		// TODO: Omit surplus bytes
 		pack(RGB, out);
 	}
 	fclose(out);
@@ -117,19 +118,19 @@ void BMP::pack(uint8_t vals[8], FILE* fp)
 	uint8_t x, p;
 	bool bit = 1;
 
-	for (int t = 0, n = 0; t < 7; ++t, ++n)
+	for (int t = 0, n = 0; t < 7; ++t , ++n)
 	{
 		pack = vals[t];
 		x = 7;
 		p = n;
-		for (int k = 0; k <= n; ++k, --p, --x)
+		for (int k = 0; k <= n; ++k , --p , --x)
 		{
 			//check bit 
 			bit = (vals[t + 1] >> x) & 1;
 
-			if (bit)	//set bit x to 1
+			if (bit) //set bit x to 1
 				pack |= 1 << p;
-			else		//set bit x to 0
+			else //set bit x to 0
 				pack &= ~(1 << p);
 		}
 		vals[t + 1] <<= t + 1;
@@ -148,7 +149,7 @@ void BMP::read_header()
 	fread(&header, sizeof(header), 1, bmp_file);
 }
 
-std::ostream & operator<<(std::ostream & os, const BMP& obj)
+std::ostream& operator<<(std::ostream& os, const BMP& obj)
 {
 	os << "Width: " << obj.header.biWidth << std::endl;
 	os << "Height: " << obj.header.biHeight << std::endl;
