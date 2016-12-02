@@ -1,43 +1,49 @@
 #include "BMP.h"
 #include <fstream>
 #include <string>
-#include "SDL.h"
+#include <cstdio>
+#include <exception>
 
-BMP::BMP(std::string name) : filename(name)
+
+/**
+* @brief: BMP file class
+* @param filename: filename
+*/
+BMP::BMP(std::string filename) 
+	: m_filename(filename), 
+	m_fs(nullptr)
 {
-	fopen_s(&bmp_file, filename.c_str(), "rb");
-
-	if (bmp_file == nullptr)
-	{
-		std::cerr << "Error. Opening file failed.\n";
-		system("Pause");
-		exit(EXIT_FAILURE);
-	}
-
+	m_fs = new File(m_filename, std::ios_base::in | std::ios_base::binary);
 	read_header();
 }
 
 BMP::~BMP()
 {
-	if (fclose(bmp_file) == EOF)
-	{
-		std::cerr << "Error. Closing file failed.\n";
-		system("Pause");
-		exit(EXIT_FAILURE);
-	}
+	delete m_fs;
 }
 
-/*
- * Read RGB values from every pixel in image and pass them to 'os' stream.
+/**
+* @brief: reading first 54 file bytes containing header into header struct
+*/
+void BMP::read_header()
+{
+	m_fs->seek(0);
+	m_fs->read(reinterpret_cast<char*>(&header), sizeof(header));
+}
+
+/*in
+ * @brief: Read RGB values from every pixel in image
+ * @param os: stream for output
  */
-void BMP::read_plxs(std::ostream& os) const
+void BMP::read_file(std::ostream& os)
 {
 	// start reading from 54 byte, as first 54 contain header info
-	fseek(bmp_file, 54, std::ios::beg);
+	m_fs->seek(54);
 	uint data_size = ((header.biWidth * 3 + 3) & (~3)) * header.biHeight; //calculate data size with padding
 	unsigned char* data = new unsigned char[data_size]; // data buffer
-	fread(data, data_size, 1, bmp_file);
+	m_fs->read(reinterpret_cast<char*>(data), data_size);
 	for (uint i = 0; i < data_size; i += 3)
+
 	{
 		int bval = static_cast<int>(data[i]);
 		int gval = static_cast<int>(data[i + 1]);
@@ -48,64 +54,53 @@ void BMP::read_plxs(std::ostream& os) const
 }
 
 /**
- * \brief Converting input 24-bit BMP file to reduced 24-bit file
+ * @brief: Converting input 24-bit BMP file to reduced 21-bit file
  */
 void BMP::convert_bmp_to_7()
 {
-	// TODO: Change creating file
-	// (just temporary) creating file if it didn't exist
-	std::fstream outcreate("output.bard", std::ios::trunc);
-	outcreate.close();
-
-	FILE* out;
-
-	if (fopen_s(&out, "output.bard", "wb+") == -1)
-	{
-		std::cerr << "opening failed.\n";
-		system("Pause");
-		exit(EXIT_FAILURE);
-	}
-
+	// init input file
 	// start reading from 54 byte, as first 54 contain header info
-	fseek(bmp_file, 54, std::ios::beg);
+	m_fs->seek(54);
 	uint data_size = ((header.biWidth * 3 + 3) & (~3)) * header.biHeight; //calculate data size with padding
 	unsigned char* data = new unsigned char[data_size]; // data buffer
-	fread(data, data_size, 1, bmp_file);
+	m_fs->read(reinterpret_cast<char*>(data), data_size);
+
+	// assuming filename is in correct format "path\\foo bar xyz.bmp"
+	File out_fs((m_filename.substr(0, m_filename.size() - 3) + "bard").c_str(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
 
 	uint i;
-	uint8_t RGB[8];
+	uint8_t pre_pack[8]{};
 	for (i = 0; i < data_size; ++i)
 	{
 		if (i != 0 && i % 8 == 0)
-			pack(RGB, out);
-		RGB[i % 8] = static_cast<uint8_t>(data[i]);
+			packer(pre_pack, out_fs);
+		pre_pack[i % 8] = static_cast<uint8_t>(data[i]);
 		// TEST 
-		// std::cout << std::dec << i << ": " << std::hex << static_cast<int>(RGB[i % 8]) << std::endl;
+		// std::cout << std::dec << i << ": " << std::hex << static_cast<int>(pre_pack[i % 8]) << std::endl;
 	}
 
-	// latest bits, that didn't fill RGB array fully
+	// latest bits, that didn't fill pre_pack array fully
 	if ((i - 1) % 8 != 0)
 	{
 		i = i % 8;
 		while (i < 8)
 		{
 			// fill with zeros remaining values
-			RGB[i] = 0;
+			pre_pack[i] = 0;
 			++i;
 		}
 		// pack same as before (in a loop)
 		// TODO: Omit surplus bytes
-		pack(RGB, out);
+		packer(pre_pack, out_fs);
 	}
-	fclose(out);
 }
 
 /**
- * \brief Reducing every byte from 8-bits to 7-bits
- * \param vals array of 8 uint8_t(8-bytes) elements, where every element will be reduced to 7-bytes
- * \param fp output file pointer
+ * @brief: Reducing every byte from 8-bits to 7-bits
+ * @param vals: array of 8 uint8_t elements, where every element will be reduced to 7-bytes
+ * @param file: File object for output
  */
-void BMP::pack(uint8_t vals[8], FILE* fp)
+void BMP::packer(uint8_t vals[8], File& file)
 {
 	// TESTS 
 	/*std::cout << "values in vals:\n";
@@ -135,18 +130,8 @@ void BMP::pack(uint8_t vals[8], FILE* fp)
 		}
 		vals[t + 1] <<= t + 1;
 
-		fwrite(&pack, sizeof(uint8_t), 1, fp);
+		file.write(reinterpret_cast<char*>(&pack), sizeof(uint8_t));
 	}
-}
-
-
-/**
- * \brief reading first 54 file bytes containing header
- */
-void BMP::read_header()
-{
-	fseek(bmp_file, 0, SEEK_SET);
-	fread(&header, sizeof(header), 1, bmp_file);
 }
 
 std::ostream& operator<<(std::ostream& os, const BMP& obj)
@@ -156,6 +141,8 @@ std::ostream& operator<<(std::ostream& os, const BMP& obj)
 	os << "Size: " << static_cast<double>(obj.header.bfSize) / 1024 << "KB" << std::endl;
 	os << "Signature: " << std::hex << obj.header.bfSignature << std::endl;
 	os << "Bit: " << std::dec << obj.header.biBitCount << std::endl;
+	os << "Offset: " << std::dec << obj.header.bfOffset << std::endl;
+	os << "Clrs used: " << std::dec << obj.header.biClrUsed << std::endl;
 	os << "Compression: " << std::dec << obj.header.biCompression << std::endl;
 	os << std::dec << std::endl;
 	return os;

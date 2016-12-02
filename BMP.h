@@ -1,21 +1,23 @@
-#ifndef BMP_H
-#define BMP_H
+#ifndef BMP_H___
+#define BMP_H___
 
-#include<iostream>
+#include <iostream>
+#include <fstream>
+#include "File.h"
+
 
 class BMP
 {
 private:
 	typedef unsigned short ushort;
 	typedef unsigned int uint;
-	//	std::fstream bmpin;		// fstream object for reading from image file
-	FILE* bmp_file;		// fstream object for reading from image file
-	std::string filename;
+	File* m_fs;	// bmp file stream
+	std::string m_filename;
 	#pragma pack(push, 2)	// set struct alignment to 0 bytes to force 54 bytes stuct size 
 	struct
 	{
 	// BMP File header part (14 bytes)
-		ushort bfSignature;		// signature (must be (hex)4D42)
+		ushort bfSignature;		// signature (must be (hex)4D42 or (dec)19778)
 		uint bfSize;			// file size in bytes (unreliable)
 		ushort bfRes1;			// reserved 1
 		ushort bfRes2;			// reserved 2
@@ -35,15 +37,14 @@ private:
 	} header, *header_ptr;		// header and header pointer
 	#pragma pack(pop)
 	void read_header();
+	void packer(uint8_t vals[8], File& file);	// convert_to_bmp auxiliary method
 public:
-	BMP(std::string name);
+	BMP(std::string filename);
 	~BMP();
 	int get_width() const { return header.biWidth; }
 	int get_height() const { return header.biHeight; }
-	void read_plxs(std::ostream& os) const;
+	void read_file(std::ostream& os = std::cout);
 	void convert_bmp_to_7();
-	void pack(uint8_t vals[8], FILE* fp);
-	void sdl_display() const;
 	friend std::ostream& operator<< (std::ostream& os, const BMP& obj);
 };
 
