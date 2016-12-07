@@ -10,9 +10,17 @@
 *.vcxproj.filters
 *.sln
 output.txt
-/test_pics
+*/test_pics/*
 *_old.cpp
 *output*
+*.bmp
+*.log
+*.bard
+/SDL-1.2.14/
+SDL.dll
+*.cbp
+*.layout
+*.depend
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
