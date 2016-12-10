@@ -11,8 +11,19 @@ Window::Window(std::string filename) : m_width(0), m_height(0),
     //draw_image();
 }
 
+//Window::Window(SDL_Surface* surf) : m_width(0), m_height(0),
+//    //m_filename(filename), ?????
+//    m_screen(nullptr), m_bmp(surf), m_dstrect(new SDL_Rect)
+//{
+//    //// TODO
+//}
+
 Window::~Window()
 {
+    SDL_SaveBMP(m_bmp, "name.bmp");
+    SDL_FreeSurface(m_screen);
+    SDL_FreeSurface(m_bmp);
+
     delete m_screen;
     delete m_bmp;
     delete m_dstrect;
@@ -64,12 +75,7 @@ void Window::create_window()
 void Window::load_image()
 {
     // load an image
-    m_bmp = SDL_LoadBMP(m_filename.c_str());
-    if (!m_bmp)
-    {
-        std::cerr << "Unable to load bitmap: " << SDL_GetError() << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    m_bmp = SDL::new_bmp_surface(m_filename.c_str());
 
     // centre the bitmap on screen
     m_dstrect->x = (m_screen->w - m_bmp->w) / 2;
@@ -126,7 +132,7 @@ void Window::draw_image()
 void Window::get_pixel(int x, int y, int& R, int& G, int& B)
 {
     uint8_t* temp;  // RGB_temps
-    temp = SDL::getpixel2(m_screen, x, y);
+    temp = SDL::get_pixel2(m_screen, x, y);
     R = static_cast<int>(temp[0]);
     G = static_cast<int>(temp[1]);
     B = static_cast<int>(temp[2]);

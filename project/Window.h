@@ -15,6 +15,7 @@ class Window
         using uint = unsigned int;
 
         Window(std::string filename);
+//        Window(int height, int width);
         ~Window();
 //        Window(const Window&) = delete;
 //        Window(Window&&) = delete;
