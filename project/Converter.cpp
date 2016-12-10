@@ -210,53 +210,63 @@ Converter::DataVector Converter::unpacker(DataVector& vals)   // conv_7 auxiliar
     }
 
 	bool bit = 1;
+	// pack_c current pack, pack_n next tmp pack, pack_p previous pack
 	uint8_t pack_c = 0x00, pack_n = 0x00, pack_p = 0x00;
-	int current_next_b = 0,  insert_previous_b = 0;
-	int insert_next_b = 0, current_previous_b = 0 ;
+
+	//current_to_next which bit copy from current pack to next pack, check_previous which bit copy from previous pack to current pack, insert_current on which position insert bit from previous pack
+	int current_to_next = 0,  insert_current = 0, check_previous = 0 ;
+
+	//n_p how many bits copy from previous pack to current pack, n_n how many bits copy from current pack to next pack
 	int n_p = -1, n_n = 0;
 
     DataVector v_output;
 
 	for (int i = 0; i < 7; i++)
 	{
-		current_next_b = n_n;
+		current_to_next = n_n;
 		pack_c = vals[i];
 
+		//copy bit from current pack to next pack 
 		for (int k = 0; k <= n_n; k++)
 		{
 			//check bit
-			bit = (pack_c >> current_next_b) & 1;
+			bit = (pack_c >> current_to_next) & 1;
 
 			if (bit) //set bit x to 1
-				pack_n |= 1 << current_next_b;
+				pack_n |= 1 << current_to_next;
 			else //set bit x to 0
-				pack_n &= ~(1 << current_next_b);
-			current_next_b--;
+				pack_n &= ~(1 << current_to_next);
+			current_to_next--;
 		}
 
+		//move n_n bits in current pack in right
 		pack_c = pack_c >> n_n;
 
-		current_previous_b = n_p;
-		insert_previous_b = 7;
+		check_previous = n_p;
+		insert_current = 7;
+
+		//copy bit from previous pack to current pack
 		for (int k = 0; k <= n_p; k++)
 		{
 			//check bit
-			bit = (pack_p >> current_previous_b) & 1;
+			bit = (pack_p >> check_previous) & 1;
 
 			if (bit) //set bit x to 1
-				pack_c |= 1 << insert_previous_b;
+				pack_c |= 1 << insert_current;
 			else //set bit x to 0
-				pack_c &= ~(1 << insert_previous_b);
+				pack_c &= ~(1 << insert_current);
 
-		//	cout << "set bit " << bit << " on position  " << insert_previous_b << endl;
-			current_previous_b--;
-			insert_previous_b--;
+			check_previous--;
+			insert_current--;
 		}
 		n_p++;
 		n_n++;
 		pack_p = 0x00;
 		pack_p = pack_n;
+
+		//set bit number 0 in current pack to 0
 		pack_c &= ~(1 << 0);
+
 		v_output.push_back(pack_c);
 		pack_c = 0x00;
 	}
