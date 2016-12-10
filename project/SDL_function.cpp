@@ -73,9 +73,9 @@ uint8_t* SDL::get_pixel2(SDL_Surface* surf, int x, int y)
 }
 
 // create new surface from existing SDL file
-SDL_Surface* SDL::new_bmp_surface(const char* filename)
+SDL_Surface* SDL::new_bmp_surface(const std::string& filename)
 {
-    SDL_Surface* surf = SDL_LoadBMP(filename);
+    SDL_Surface* surf = SDL_LoadBMP(filename.c_str());
     if (!surf)
     {
         std::cerr << "Unable to load bitmap: " << SDL_GetError() << std::endl;

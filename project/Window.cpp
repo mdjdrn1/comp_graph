@@ -20,7 +20,6 @@ Window::Window(std::string filename) : m_width(0), m_height(0),
 
 Window::~Window()
 {
-    SDL_SaveBMP(m_bmp, "name.bmp");
     SDL_FreeSurface(m_screen);
     SDL_FreeSurface(m_bmp);
 

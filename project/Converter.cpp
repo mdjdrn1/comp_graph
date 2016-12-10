@@ -16,18 +16,18 @@ void Converter::change_mode(mode new_mode)
 }
 
 // TODO: change parameter to filnemame only
-void Converter::convert(Window* win)
+void Converter::convert(const std::string& filename)
 {
     switch(m_cur_mode)
     {
         case BITPACK:
-            conv_7(win);
+            conv_7(filename);
             break;
         case HUFF:
-            conv_huffman(win);
+            conv_huffman(filename);
             break;
         case RLE:
-            conv_rle(win);
+            conv_rle(filename);
             break;
         default:
             std::cerr << "Invalid convert mode.\n" << std::endl;
@@ -37,10 +37,13 @@ void Converter::convert(Window* win)
 }
 
 // TODO: change parameter to SDL_Surface and std::string (filename)
-void Converter::conv_7(Window* win)
+void Converter::conv_7(const std::string& filename)
 {
+    // load surface
+    SDL_Surface* image = SDL::new_bmp_surface(filename);
+
 	// assuming filename is in correct format "path\\foo bar xyz.bmp"
-	std::string out_name = win->m_filename.substr(0, win->m_filename.size() - 4) + "_7.bard";   // bitpack and rle dustin-huffman
+	std::string out_name = filename.substr(0, filename.size() - 4) + "_7.bard";   // bitpack and rle dustin-huffman
 	std::fstream out_fs(out_name.c_str(),
                      std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
 
@@ -50,17 +53,18 @@ void Converter::conv_7(Window* win)
         exit(EXIT_FAILURE);
     }
 
-    bard_header new_header = create_header(win->m_bmp);
+    bard_header new_header = create_header(image, BITPACK, 0);
     out_fs.write(reinterpret_cast<char*>(&new_header), sizeof(new_header));
+//    out_fs.seekg(new_header.offset, std::ios_base::beg);
 
 	vect<uint8_t> v1;
 	uint8_t* pix; // temporary rgbs
 
-	for (int y = 0; y < win->m_bmp->h; ++y)
+	for (int y = 0; y < image->h; ++y)
 	{
-	    for(int x = 0; x < win->m_bmp->w; ++x)
+	    for(int x = 0; x < image->w; ++x)
 		{
-            pix = SDL::get_pixel2(win->m_bmp, x, y);
+            pix = SDL::get_pixel2(image, x, y);
 
             for(int p=2; p>=0; --p)
                 v1.push_back(pix[p]);
@@ -83,12 +87,12 @@ void Converter::conv_7(Window* win)
 	}
 }
 
-void Converter::conv_huffman(Window* win)
+void Converter::conv_huffman(const std::string& filename)
 {
     // TODO
 }
 
-void Converter::conv_rle(Window* win)
+void Converter::conv_rle(const std::string& filename)
 {
     // TODO
 }
@@ -127,7 +131,7 @@ void Converter::packer(vect<uint8_t>& vals, std::fstream& out_file)
 	}
 }
 
-void Converter::deconvert(std::string filename)
+void Converter::deconvert(const std::string& filename)
 {
     switch(m_cur_mode)
     {
@@ -147,7 +151,7 @@ void Converter::deconvert(std::string filename)
     }
 }
 
-void Converter::dconv_7(std::string filename)
+void Converter::dconv_7(const std::string& filename)
 {
 	std::fstream in_file(filename.c_str(), std::ios_base::in | std::ios_base::binary);  // input (bard) file that will be encoded
 
@@ -157,7 +161,13 @@ void Converter::dconv_7(std::string filename)
 	vect<uint8_t> v_temp;
 	vect<uint8_t> v_aftconv;  // after conversion. All RGB channels for every pixel in file (order BGR)
 
-    in_file.seekg(hb.offset, std::ios_base::beg);  // set file to read after header
+//    in_file.seekg(hb.offset, std::ios_base::beg);  // set file to read after header
+///////
+    // TEMP OVERRIDING THESE DATA AS READING HEADER IS INVALID
+    in_file.seekg(16, std::ios_base::beg);  // set file to read after header
+    hb.height = 300;
+    hb.width = 450;
+///////
 
     uint8_t tmp;
 	while (!in_file.eof())
@@ -189,15 +199,17 @@ void Converter::dconv_7(std::string filename)
 		v_temp.erase(v_temp.begin(), v_temp.end()); // clean up
     }
 
-//    SDL_Surface* output_surface = SDL::new_empty_surface(hb.width, hb.width); // creates surface for drawuing pixels (size hb.width x hb.height)
-    SDL_Surface* output_surface = SDL::new_empty_surface(450, 300);
+    SDL_Surface* output_surface = SDL::new_empty_surface(hb.width, hb.height); // creates surface for drawuing pixels (size hb.width x hb.height)
 
-    // drawing pixels here
     // TODO: put this into funvtion (width, height, &v_aftconv)
-    for(int y=0; y < hb.height; ++y)
+    // drawing pixels here
+//    for(int y=0; y < hb.height; ++y)
+    for(int y=0; y < 300; ++y)
     {
-        for(int x=0; x < hb.width; ++x)
+//        for(int x=0; x < hb.width; ++x)
+        for(int x=0; x < 450; ++x)
         {
+//            std::cerr<< "drawing pixel x="<<x << " y=" << y <<std::endl;
             if(v_aftconv.size() < 3)
             {
                 std::cerr << "Not enough values to draw whole pixel";
@@ -214,15 +226,14 @@ void Converter::dconv_7(std::string filename)
     SDL_SaveBMP(output_surface, (out_name).c_str());    // finally, save file to BMP extension
 
 	SDL::delete_surface(output_surface);    // clean up surface
-
 }
 
-void Converter::dconv_huffman(std::string filename)
+void Converter::dconv_huffman(const std::string& filename)
 {
     // TODO
 }
 
-void Converter::dconv_rle(std::string filename)
+void Converter::dconv_rle(const std::string& filename)
 {
     // TODO
 }
@@ -237,46 +248,46 @@ Converter::vect<uint8_t> Converter::unpacker(vect<uint8_t>& vals)   // conv_7 au
 
 	bool bit = 1;
 	uint8_t pack_c = 0x00, pack_n = 0x00, pack_p = 0x00;
-	int curent_next_b = 0,  insert_previus_b = 0;
-	int insert_next_b = 0, curent_previus_b = 0 ;
+	int current_next_b = 0,  insert_previous_b = 0;
+	int insert_next_b = 0, current_previous_b = 0 ;
 	int n_p = -1, n_n = 0;
 
     vect<uint8_t> v_output;
 
 	for (int i = 0; i < 7; i++)
 	{
-		curent_next_b = n_n;
+		current_next_b = n_n;
 		pack_c = vals[i];
 
 		for (int k = 0; k <= n_n; k++)
 		{
 			//check bit
-			bit = (pack_c >> curent_next_b) & 1;
+			bit = (pack_c >> current_next_b) & 1;
 
 			if (bit) //set bit x to 1
-				pack_n |= 1 << curent_next_b;
+				pack_n |= 1 << current_next_b;
 			else //set bit x to 0
-				pack_n &= ~(1 << curent_next_b);
-			curent_next_b--;
+				pack_n &= ~(1 << current_next_b);
+			current_next_b--;
 		}
 
 		pack_c = pack_c >> n_n;
 
-		curent_previus_b = n_p;
-		insert_previus_b = 7;
+		current_previous_b = n_p;
+		insert_previous_b = 7;
 		for (int k = 0; k <= n_p; k++)
 		{
 			//check bit
-			bit = (pack_p >> curent_previus_b) & 1;
+			bit = (pack_p >> current_previous_b) & 1;
 
 			if (bit) //set bit x to 1
-				pack_c |= 1 << insert_previus_b;
+				pack_c |= 1 << insert_previous_b;
 			else //set bit x to 0
-				pack_c &= ~(1 << insert_previus_b);
+				pack_c &= ~(1 << insert_previous_b);
 
-		//	cout << "set bit " << bit << " on position  " << insert_previus_b << endl;
-			curent_previus_b--;
-			insert_previus_b--;
+		//	cout << "set bit " << bit << " on position  " << insert_previous_b << endl;
+			current_previous_b--;
+			insert_previous_b--;
 		}
 		n_p++;
 		n_n++;
@@ -291,7 +302,7 @@ Converter::vect<uint8_t> Converter::unpacker(vect<uint8_t>& vals)   // conv_7 au
     return v_output;
 }
 
-Converter::bard_header Converter::create_header(SDL_Surface* surface, mode_t compression_mode, int grayscale)
+Converter::bard_header Converter::create_header(SDL_Surface* surface, mode compression_mode, int grayscale)
 {
     bard_header new_header;
 
@@ -305,22 +316,9 @@ Converter::bard_header Converter::create_header(SDL_Surface* surface, mode_t com
 
 Converter::bard_header Converter::read_header(std::fstream& input)
 {
-    uint8_t* buffer = new uint8_t[sizeof(bard_header)]; // 16 bytes in header
-    input.seekg(0, std::ios_base::beg); // set input file to begin
-    input.read(reinterpret_cast<char*>(buffer), sizeof(bard_header));
-
-    /*uint offset;          // 0-4
-    int width;             // 4-8
-    int height;              // 8-12
-    ushort gray;            // 12-14
-    ushort compression;*/   // 14-16
-
     bard_header new_header;
-    new_header.offset = static_cast<uint>(buffer[0]);
-    new_header.width = static_cast<int>(buffer[4]);
-    new_header.height = static_cast<int>(buffer[8]);
-    new_header.gray = static_cast<ushort>(buffer[12]);
-    new_header.compression = static_cast<ushort>(buffer[14]);
+    input.seekg(0, std::ios_base::beg); // set input file to begin
+    input.read(reinterpret_cast<char*>(&new_header), sizeof(new_header));
 
     return new_header;
 }

@@ -17,10 +17,10 @@ class Window
         Window(std::string filename);
 //        Window(int height, int width);
         ~Window();
-//        Window(const Window&) = delete;
-//        Window(Window&&) = delete;
-//        Window& operator=(const Window&) = delete;
-//        Window& operator=(Window&&) = delete;
+        Window(const Window&) = delete;
+        Window(Window&&) = delete;
+        Window& operator=(const Window&) = delete;
+        Window& operator=(Window&&) = delete;
     private:
         uint m_width;
         uint m_height;

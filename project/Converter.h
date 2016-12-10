@@ -38,21 +38,22 @@ class Converter
         };
         #pragma pack(pop)
     private:
-        bard_header create_header(SDL_Surface* surface, mode_t compression_mode=BITPACK, int grayscale=0);
+        bard_header create_header(SDL_Surface* surface, mode compression_mode=BITPACK, int grayscale=0);
         bard_header read_header(std::fstream& input);
 
-       	void conv_7(Window* win);  // conversion from 8-bit to 7-bit
-        void conv_huffman(Window* win);
-        void conv_rle(Window* win);
+       	void conv_7(const std::string& filename);  // conversion from 8-bit to 7-bit
         void packer(vect<uint8_t>& vals, std::fstream& out_file);   // conv_7 auxiliary method
-        void dconv_7(std::string filename);
-        void dconv_huffman(std::string filename);
-        void dconv_rle(std::string filename);
-        vect<uint8_t> unpacker(vect<uint8_t>& vals);   // conv_7 auxiliary method
+        void conv_huffman(const std::string& filename);
+        void conv_rle(const std::string& filename);
+
+        void dconv_7(const std::string& filename);
+        vect<uint8_t> unpacker(vect<uint8_t>& vals);   // dconv_7 auxiliary method
+        void dconv_huffman(const std::string& filename);
+        void dconv_rle(const std::string& filename);
     public:
         void change_mode(mode new_mode);
-        void convert(Window* win); // surface == m_bmp from MainWindow
-        void deconvert(std::string filename);
+        void convert(const std::string& filename);
+        void deconvert(const std::string& filename);
 };
 
 #endif // CONVERTER_H
