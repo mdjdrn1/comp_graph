@@ -16,10 +16,9 @@ class Converter
     public:
         using uint = unsigned int;
         using ushort = unsigned short;
-        template <class T>
-        using vect = std::vector<T>;
+        using DataVector = std::vector<uint8_t>;
 
-        enum mode { BITPACK, HUFF, RLE };   // TODO: read from header in bard
+        enum mode { BITPACK, HUFF, RLE };
         mode m_cur_mode;    // current mode
         explicit Converter( mode selection );
         ~Converter();
@@ -27,27 +26,30 @@ class Converter
         Converter(Converter&&) = delete;
         Converter& operator=(const Converter&) = delete;
         Converter& operator=(Converter&&) = delete;
-        #pragma pack(push, 2)	// set struct alignment to 0 bytes to force 54 bytes stuct size
-        struct bard_header  // 16 bytes
+        #pragma pack(push, 0)	// set struct alignment to 0 bytes to force 16 bytes stuct size
+        struct bard_header
         {
-            uint offset;
+            uint offset;            // offset to data, should be 16 bytes
             int width;
             int height;
-            ushort gray;
-            ushort compression;     // 0 1 2
+            ushort gray;            // grayscale
+            ushort compression;     // 0=BITPACK, 1=HUFFMAN, 2=RLE
         };
         #pragma pack(pop)
     private:
-        bard_header create_header(SDL_Surface* surface, mode compression_mode=BITPACK, int grayscale=0);
+        // creating and reading header
+        bard_header create_header(SDL_Surface* image, mode compression_mode=BITPACK, int grayscale=0);
         bard_header read_header(std::fstream& input);
-
+        // coding methods
        	void conv_7(const std::string& filename);  // conversion from 8-bit to 7-bit
-        void packer(vect<uint8_t>& vals, std::fstream& out_file);   // conv_7 auxiliary method
+        void packer(DataVector& vals, std::fstream& out_file);   // conv_7 auxiliary method
         void conv_huffman(const std::string& filename);
         void conv_rle(const std::string& filename);
-
+        // decoding methods
         void dconv_7(const std::string& filename);
-        vect<uint8_t> unpacker(vect<uint8_t>& vals);   // dconv_7 auxiliary method
+        DataVector unpacker(DataVector& vals);   // dconv_7 auxiliary method
+        void draw_pixels(SDL_Surface* image, DataVector& pixels);
+
         void dconv_huffman(const std::string& filename);
         void dconv_rle(const std::string& filename);
     public:

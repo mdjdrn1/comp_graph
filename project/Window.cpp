@@ -11,13 +11,6 @@ Window::Window(std::string filename) : m_width(0), m_height(0),
     //draw_image();
 }
 
-//Window::Window(SDL_Surface* surf) : m_width(0), m_height(0),
-//    //m_filename(filename), ?????
-//    m_screen(nullptr), m_bmp(surf), m_dstrect(new SDL_Rect)
-//{
-//    //// TODO
-//}
-
 Window::~Window()
 {
     SDL_FreeSurface(m_screen);

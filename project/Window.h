@@ -14,8 +14,7 @@ class Window
     public:
         using uint = unsigned int;
 
-        Window(std::string filename);
-//        Window(int height, int width);
+        explicit Window(std::string filename);
         ~Window();
         Window(const Window&) = delete;
         Window(Window&&) = delete;
@@ -37,7 +36,7 @@ class Window
         void load_image();
     public:
         void draw_image();
-    ////////////////////////
+
         inline uint get_width() { return m_width; };
         inline uint get_height() { return m_height; };
         void get_pixel(int x, int y, int& R, int& G, int& B);
