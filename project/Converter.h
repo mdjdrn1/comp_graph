@@ -9,8 +9,6 @@
 #include <algorithm>    // std::copy
 #include <iterator> // std::next
 
-class Window;   // declaration of Window, as its friend class is Converter
-
 class Converter
 {
     public:
@@ -22,13 +20,10 @@ class Converter
         Converter(Converter&&) = delete;
         Converter& operator=(const Converter&) = delete;
         Converter& operator=(Converter&&) = delete;
-
+    public:
         using uint = unsigned int;
         using ushort = unsigned short;
         using DataVector = std::vector<uint8_t>;
-
-        mode m_cur_mode;    // current mode
-        bool m_grayscale;
 
         #pragma pack(push, 0)	// set struct alignment to 0 bytes to force 14 bytes stuct size
         struct bard_header
@@ -41,12 +36,15 @@ class Converter
         };
         #pragma pack(pop)
     private:
+        mode m_cur_mode;    // current mode
+        bool m_grayscale;   // grayscale
+
         // creating and reading header
         bard_header create_header(SDL_Surface* image, mode compression_mode=BITPACK, int grayscale=0);
         bard_header read_header(std::fstream& input);
         // coding methods
        	void conv_7(const std::string& filename);  // conversion from 8-bit to 7-bit
-        void packer(DataVector& vals, std::fstream& out_file);   // conv_7 auxiliary method
+        DataVector packer(DataVector& vals);   // conv_7 auxiliary method
         void conv_huffman(const std::string& filename);
         void conv_rle(const std::string& filename);
         // decoding methods
@@ -60,7 +58,7 @@ class Converter
         void convert(const std::string& filename);
         void deconvert(const std::string& filename);
 
-        void change_mode(mode new_mode, bool grayscale);
+        void change_mode(mode new_mode, bool grayscale);    // change coding algorithm
         void to_gray(uint8_t* pixel);
 };
 

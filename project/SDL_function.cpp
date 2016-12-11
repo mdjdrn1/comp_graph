@@ -1,7 +1,15 @@
 #include "SDL_function.h"
 #include <iostream>
 
-Uint32 SDL::get_pixel(SDL_Surface *surface, int x, int y)
+/** \brief Gets pixel RGB values from SDL_Surface
+ *
+ * \param surface SDL_Surface* image
+ * \param x const int& x pos (indexing from 0)
+ * \param y const int& y pos (indexing from 0)
+ * \return Uint32 var with pixel values (RGBA)
+ *
+ */
+Uint32 SDL::get_pixel(SDL_Surface *surface, const int& x, const int& y)
 {
     int bpp = surface->format->BytesPerPixel;
     /* Here p is the address to the pixel we want to retrieve */
@@ -28,7 +36,18 @@ Uint32 SDL::get_pixel(SDL_Surface *surface, int x, int y)
     }
 }
 
-void SDL::draw_pixel(SDL_Surface *surface, int x, int y, uint8_t R, uint8_t G, uint8_t B)
+/** \brief Draws pixel into SDL_Surface
+ *
+ * \param surface SDL_Surface* image
+ * \param x const int& x pos (indexing from 0)
+ * \param y const int& y pos (indexing from 0)
+ * \param R const uint8_t& R value
+ * \param G const uint8_t& G value
+ * \param B const uint8_t& B value
+ * \return void
+ *
+ */
+void SDL::draw_pixel(SDL_Surface *surface, const int& x, const int& y, const uint8_t& R, const uint8_t& G, const uint8_t& B)
 {
     Uint32 pixel = SDL_MapRGB(surface->format, R, G, B);
 
@@ -63,28 +82,48 @@ void SDL::draw_pixel(SDL_Surface *surface, int x, int y, uint8_t R, uint8_t G, u
     }
 }
 
-uint8_t* SDL::get_pixel2(SDL_Surface* surf, int x, int y)
+/** \brief Gets pixel RGB values from SDL_Surface
+ *
+ * \param surface SDL_Surface* image
+ * \param x const int& x pos (indexing from 0)
+ * \param y const int& y pos (indexing from 0)
+ * \return uint8_t* 3-item array with RGB values
+ *
+ */
+uint8_t* SDL::get_pixel2(SDL_Surface* surface, const int& x, const int& y)
 {
     uint8_t* res = new uint8_t [3]; // res will contain RGB values
-    Uint32 pixel = SDL::get_pixel(surf, x, y);
-    SDL_GetRGB(pixel, surf->format, res, res+1, res+2);
+    Uint32 pixel = SDL::get_pixel(surface, x, y);
+    SDL_GetRGB(pixel, surface->format, res, res+1, res+2);
 
     return res;
 }
 
-// create new surface from existing SDL file
+/** \brief creating new SDL_Surface from existing file
+ *
+ * \param filename const std::string& file name
+ * \return SDL_Surface* new surface
+ *
+ */
 SDL_Surface* SDL::new_bmp_surface(const std::string& filename)
 {
-    SDL_Surface* surf = SDL_LoadBMP(filename.c_str());
-    if (!surf)
+    SDL_Surface* surface = SDL_LoadBMP(filename.c_str());
+    if (!surface)
     {
         std::cerr << "Unable to load bitmap: " << SDL_GetError() << std::endl;
         exit(EXIT_FAILURE);
     }
-    return surf;
+    return surface;
 }
 
-SDL_Surface* SDL::new_empty_surface(int width, int height)
+/** \brief creating new empty SDL_Surface
+ *
+ * \param width const int& width of new surface
+ * \param height const int& height of new surface
+ * \return SDL_Surface* new surface
+ *
+ */
+SDL_Surface* SDL::new_empty_surface(const int& width, const int& height)
 {
     int bit_depth = 24;
 
@@ -97,6 +136,12 @@ SDL_Surface* SDL::new_empty_surface(int width, int height)
     return surf;
 }
 
+/** \brief Delete properly SDL_Surface
+ *
+ * \param surf SDL_Surface* surface
+ * \return void
+ *
+ */
 void SDL::delete_surface(SDL_Surface* surf)
 {
     SDL_FreeSurface(surf);
