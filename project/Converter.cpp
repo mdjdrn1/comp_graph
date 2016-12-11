@@ -1,6 +1,6 @@
 #include "Converter.h"
 
-Converter::Converter(mode selection) : m_cur_mode(selection)
+Converter::Converter(mode selection, bool grayscale) : m_cur_mode(selection), m_grayscale(grayscale)
 {
 }
 
@@ -8,10 +8,10 @@ Converter::~Converter()
 {
 }
 
-
-void Converter::change_mode(mode new_mode)
+void Converter::change_mode(mode new_mode, bool grayscale)
 {
     m_cur_mode = new_mode;
+    m_grayscale = grayscale;
 }
 
 void Converter::convert(const std::string& filename)
@@ -56,18 +56,20 @@ void Converter::conv_7(const std::string& filename)
     out_fs.seekg(new_header.offset, std::ios_base::beg);
 
 	DataVector v1; // vector with converter RGB values (in BGR order)
-	uint8_t* pix; // temporary rgbs
+	uint8_t* pixel; // temporary rgbs
 
 	for (int y = 0; y < image->h; ++y)
 	{
 	    for(int x = 0; x < image->w; ++x)
 		{
-            pix = SDL::get_pixel2(image, x, y); // read RGB values
+            pixel = SDL::get_pixel2(image, x, y); // read RGB values
+            if(m_grayscale == 1)
+                to_gray(pixel);
 
             for(int p=2; p>=0; --p)
-                v1.push_back(pix[p]);   // append read values
+                v1.push_back(pixel[p]);   // append read values
 
-            delete[] pix;
+            delete[] pixel;
 
 		    if (v1.size() >= 8)
             {
@@ -155,8 +157,8 @@ void Converter::dconv_7(const std::string& filename)
 	// reading values from file
     std::fstream in_file(filename.c_str(), std::ios_base::in | std::ios_base::binary);  // input (bard) file that will be encoded
 
-    bard_header hb = read_header(in_file);  // reading bard_header
-    in_file.seekg(hb.offset, std::ios_base::beg);  // set file to read after header
+    bard_header header = read_header(in_file);  // reading bard_header
+    in_file.seekg(header.offset, std::ios_base::beg);  // set file to read after header
 
 	DataVector raw_vals;  // before-conversion vector. It will contain all "7-bit" values read from file and BEFORE being decoded into 8-bit values (in order BGR)
 	DataVector v_temp;
@@ -192,7 +194,7 @@ void Converter::dconv_7(const std::string& filename)
 
     in_file.close();    // finished reading. clean up
 
-    SDL_Surface* output_image = SDL::new_empty_surface(hb.width, hb.height); // creates surface for drawuing pixels (size hb.width x hb.height)
+    SDL_Surface* output_image = SDL::new_empty_surface(header.width, header.height); // creates surface for drawuing pixels (size header.width x header.height)
     draw_pixels(output_image, decode_vals);    // drawing pixels here
 
     std::string out_name = filename.substr(0, filename.size() - 5) + "_decoded.bmp";   // output file name
@@ -226,7 +228,7 @@ Converter::DataVector Converter::unpacker(DataVector& vals)   // conv_7 auxiliar
 		current_to_next = n_n;
 		pack_c = vals[i];
 
-		//copy bit from current pack to next pack 
+		//copy bit from current pack to next pack
 		for (int k = 0; k <= n_n; k++)
 		{
 			//check bit
@@ -312,7 +314,7 @@ Converter::bard_header Converter::create_header(SDL_Surface* image, mode compres
     new_header.offset = sizeof(bard_header);
     new_header.width = image->w;
     new_header.height = image->h;
-    new_header.gray = static_cast<ushort>(grayscale);
+    new_header.grayscale = m_grayscale;
     new_header.compression = static_cast<ushort>(compression_mode);
 
     return new_header;
@@ -326,4 +328,11 @@ Converter::bard_header Converter::read_header(std::fstream& input)
     input.read(reinterpret_cast<char*>(&new_header), sizeof(new_header));
 
     return new_header;
+}
+
+void Converter::to_gray(uint8_t* pixel)  // pixel in BGR order
+{
+    // using luma formula to calculate "relative luminescence"
+    uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);
+    pixel[0] = pixel[1] = pixel[2] = luma;
 }

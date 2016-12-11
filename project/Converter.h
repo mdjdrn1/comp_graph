@@ -14,25 +14,29 @@ class Window;   // declaration of Window, as its friend class is Converter
 class Converter
 {
     public:
-        using uint = unsigned int;
-        using ushort = unsigned short;
-        using DataVector = std::vector<uint8_t>;
-
         enum mode { BITPACK, HUFF, RLE };
-        mode m_cur_mode;    // current mode
-        explicit Converter( mode selection );
+
+        explicit Converter(mode selection = BITPACK, bool grayscale = 0);
         ~Converter();
         Converter(const Converter&) = delete;
         Converter(Converter&&) = delete;
         Converter& operator=(const Converter&) = delete;
         Converter& operator=(Converter&&) = delete;
-        #pragma pack(push, 0)	// set struct alignment to 0 bytes to force 16 bytes stuct size
+
+        using uint = unsigned int;
+        using ushort = unsigned short;
+        using DataVector = std::vector<uint8_t>;
+
+        mode m_cur_mode;    // current mode
+        bool m_grayscale;
+
+        #pragma pack(push, 0)	// set struct alignment to 0 bytes to force 14 bytes stuct size
         struct bard_header
         {
-            uint offset;            // offset to data, should be 16 bytes
+            uint offset;            // offset to data, should be 14 bytes
             int width;
             int height;
-            ushort gray;            // grayscale
+            ushort grayscale;    // 0 or 1
             ushort compression;     // 0=BITPACK, 1=HUFFMAN, 2=RLE
         };
         #pragma pack(pop)
@@ -53,9 +57,11 @@ class Converter
         void dconv_huffman(const std::string& filename);
         void dconv_rle(const std::string& filename);
     public:
-        void change_mode(mode new_mode);
         void convert(const std::string& filename);
         void deconvert(const std::string& filename);
+
+        void change_mode(mode new_mode, bool grayscale);
+        void to_gray(uint8_t* pixel);
 };
 
 #endif // CONVERTER_H

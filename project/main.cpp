@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     std::cerr.rdbuf(log.rdbuf());   // redirect stderr to log file
 
     // CONVERSION TEST
-    Converter conv(Converter::BITPACK);
+    Converter conv(Converter::BITPACK, 1);
 
     // const int N = 6;
     // std::string name [N] = {"test_pics\\pic1_cut.bmp", "test_pics\\pic1.bmp"};
