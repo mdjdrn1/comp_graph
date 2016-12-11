@@ -11,6 +11,13 @@ Window::Window(std::string filename) : m_width(0), m_height(0),
     //draw_image();
 }
 
+Window::Window(SDL_Surface* image) : m_width(image->w), m_height(image->h),
+    m_filename("\0"), m_screen(nullptr), m_bmp(image), m_dstrect(new SDL_Rect)
+{
+    init();
+    create_window();
+}
+
 Window::~Window()
 {
     SDL_FreeSurface(m_screen);
@@ -24,6 +31,11 @@ Window::~Window()
     exit(EXIT_SUCCESS);
 }
 
+/** \brief Seting width and height when creating Window from file
+ *
+ * \return void
+ *
+ */
 void Window::set_dimensions()
 {
     std::fstream bmp_file(m_filename, std::ios_base::in | std::ios_base::binary);
@@ -39,24 +51,31 @@ void Window::set_dimensions()
     bmp_file.close();
 }
 
+/** \brief initialize SDL video
+ *
+ * \return void
+ *
+ */
 void Window::init()
 {
-// initialize SDL video
     if ( SDL_Init( SDL_INIT_VIDEO ) < 0 )
     {
         std::cerr << "Unable to init SDL: "<< SDL_GetError() << std::endl;
         exit(EXIT_FAILURE);
     }
-
     // make sure SDL cleans up before exit
     atexit(SDL_Quit);
 }
 
+/** \brief create a new window
+ *
+ * \return void
+ *
+ */
 void Window::create_window()
 {
-    // create a new window
     m_screen = SDL_SetVideoMode(m_width, m_height, 16,
-                                           SDL_HWSURFACE|SDL_DOUBLEBUF);
+                                SDL_HWSURFACE|SDL_DOUBLEBUF);
     if ( !m_screen )
     {
         std::cerr << "Unable to set " << m_width << "x" << m_height << " video: " << SDL_GetError() << std::endl;
@@ -64,9 +83,13 @@ void Window::create_window()
     }
 }
 
+/** \brief load an image from file
+ *
+ * \return void
+ *
+ */
 void Window::load_image()
 {
-    // load an image
     m_bmp = SDL::new_bmp_surface(m_filename.c_str());
 
     // centre the bitmap on screen
@@ -74,6 +97,11 @@ void Window::load_image()
     m_dstrect->y = (m_screen->h - m_bmp->h) / 2;
 }
 
+/** \brief draw image
+ *
+ * \return void
+ *
+ */
 void Window::draw_image()
 {
     // program main loop
@@ -87,19 +115,19 @@ void Window::draw_image()
             // check for messages
             switch (event.type)
             {
-                // exit if the window is closed
+            // exit if the window is closed
             case SDL_QUIT:
                 done = true;
                 break;
 
-                // check for keypresses
+            // check for keypresses
             case SDL_KEYDOWN:
-                {
-                    // exit if ESCAPE is pressed
-                    if (event.key.keysym.sym == SDLK_ESCAPE)
-                        done = true;
-                    break;
-                }
+            {
+                // exit if ESCAPE is pressed
+                if (event.key.keysym.sym == SDLK_ESCAPE)
+                    done = true;
+                break;
+            }
             } // end switch
         } // end of message processing
 
@@ -119,14 +147,4 @@ void Window::draw_image()
 
     // free loaded bitmap
     SDL_FreeSurface(m_bmp);
-}
-
-void Window::get_pixel(int x, int y, int& R, int& G, int& B)
-{
-    uint8_t* temp;  // RGB_temps
-    temp = SDL::get_pixel2(m_screen, x, y);
-    R = static_cast<int>(temp[0]);
-    G = static_cast<int>(temp[1]);
-    B = static_cast<int>(temp[2]);
-    delete[] temp;
 }
