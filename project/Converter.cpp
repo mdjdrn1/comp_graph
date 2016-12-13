@@ -8,7 +8,7 @@ Converter::~Converter()
 {
 }
 
-/** \brief runs proper converting method for current mode
+/** \brief Run proper converting method for current mode
  *
  * \param filename const std::string& converted file path
  * \return void
@@ -34,7 +34,7 @@ void Converter::convert(const std::string& filename)
     }
 }
 
-/** \brief Runs proper deconverting method for current mode
+/** \brief Run proper deconverting method for current mode
  *
  * \param filename const std::string& converted file name
  * \return void
@@ -61,7 +61,7 @@ void Converter::deconvert(const std::string& filename)
 }
 
 
-/** \brief Draws pixels into SDL_Surface image and cleans them up from 'pixels'
+/** \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
  *
  * \param image SDL_Surface* pixels-input surface
  * \param pixels DataVector& vector with uint8_ts that represent pixels' RGB channels (in BRG order)
@@ -87,7 +87,7 @@ void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels)
     }
 }
 
-/** \brief Creates bard header
+/** \brief Create bard header
  *
  * \param image SDL_Surface* image to create header from
  * \param compression_mode mode BITPACK, RLE or HUFF
@@ -102,14 +102,14 @@ Converter::bard_header Converter::create_header(SDL_Surface* image, mode compres
     new_header.offset = sizeof(bard_header);
     new_header.width = image->w;
     new_header.height = image->h;
-    new_header.grayscale = m_grayscale;
+    new_header.grayscale = grayscale;
     new_header.compression = static_cast<ushort>(compression_mode);
 
     return std::move(new_header);
 }
 
 
-/** \brief Reads header from bard file
+/** \brief Readheader from bard file
  *
  * \param input std::fstream& input file stream
  * \return Converter::bard_header read header
@@ -125,7 +125,7 @@ Converter::bard_header Converter::read_header(std::fstream& input)
 }
 
 
-/** \brief changing mode of converter
+/** \brief Change mode of converter
  *
  * \param new_mode mode BITPACK, RLE or HUFF
  * \param grayscale bool 1 if converting image to grayscale, otherwise 0
@@ -139,9 +139,9 @@ void Converter::change_mode(mode new_mode, bool grayscale)
 }
 
 
-/** \brief Altering pixel into grayscale mode
+/** \brief Alter pixel into grayscale
  *
- * \param pixel uint8_t* pointer to array of 3 uint8_ts representing BGR in RGB pixel
+ * \param pixel PixArr  array of 3 uint8_ts representing RGB pixel (in BGR order)
  * \return void
  *
  */

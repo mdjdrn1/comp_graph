@@ -64,7 +64,7 @@ void Converter::conv_7(const std::string& filename)
 }
 
 
-/** \brief Converts pack of 8 bytes into 7 bytes
+/** \brief Convert pack of 8 bytes into 7 bytes
  *
  * \param vals DataVector& vector with uint8_ts. It must constain at least 8 values (bytes).
  * 8 of them will be manipluated
@@ -159,7 +159,7 @@ void Converter::dconv_7(const std::string& filename)
 	SDL::delete_surface(output_image);    // clean up surface
 }
 
-/** \brief Deonverts 7 bytes into 8 bytes
+/** \brief Deconvert 7 bytes into 8 bytes
  *
  * \param vals DataVector& vector with uint8_ts that represent pixels' RGB channels (in BRG order)
  *. It must constain at least 7 values (bytes), 7 of them will be manipluated

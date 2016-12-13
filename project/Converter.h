@@ -26,10 +26,11 @@ class Converter
         using DataVector = std::vector<uint8_t>;
         using PixArr = SDL::PixArr; // PixArr = std::array<uint8_t, 3>
 
-        #pragma pack(push, 0)	// set struct alignment to 0 bytes to force 14 bytes stuct size
+        #pragma pack(push, 0)	// set struct alignment to 0 bytes to 'turn off' paddings
         struct bard_header
         {
-            uint offset;            // offset to data, should be 14 bytes
+            // TODO: Add var for offset to Huffman's codes array
+            uint offset;            // offset to data, should be 16 bytes
             int width;
             int height;
             ushort grayscale;    // 0 or 1

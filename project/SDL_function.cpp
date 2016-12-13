@@ -1,7 +1,7 @@
 #include "SDL_function.h"
 #include <iostream>
 
-/** \brief Gets pixel RGB values from SDL_Surface
+/** \brief Get pixel RGB values from SDL_Surface
  *
  * \param surface SDL_Surface* image
  * \param x const int& x pos (indexing from 0)
@@ -36,7 +36,7 @@ Uint32 SDL::get_pixel(SDL_Surface *surface, const int& x, const int& y)
     }
 }
 
-/** \brief Draws pixel into SDL_Surface
+/** \brief Draw pixel into SDL_Surface
  *
  * \param surface SDL_Surface* image
  * \param x const int& x pos (indexing from 0)
@@ -82,12 +82,12 @@ void SDL::draw_pixel(SDL_Surface *surface, const int& x, const int& y, const uin
     }
 }
 
-/** \brief Gets pixel RGB values from SDL_Surface
+/** \brief Get pixel RGB values from SDL_Surface
  *
  * \param surface SDL_Surface* image
  * \param x const int& x pos (indexing from 0)
  * \param y const int& y pos (indexing from 0)
- * \return uint8_t* 3-item array with RGB values
+ * \return SDL::PixArr 3-item array with RGB values
  *
  */
 SDL::PixArr SDL::get_pixel2(SDL_Surface* surface, const int& x, const int& y)
@@ -99,7 +99,7 @@ SDL::PixArr SDL::get_pixel2(SDL_Surface* surface, const int& x, const int& y)
     return std::move(pixel_array);
 }
 
-/** \brief creating new SDL_Surface from existing file
+/** \brief Create new SDL_Surface from existing file
  *
  * \param filename const std::string& file name
  * \return SDL_Surface* new surface
@@ -116,7 +116,7 @@ SDL_Surface* SDL::new_bmp_surface(const std::string& filename)
     return surface;
 }
 
-/** \brief creating new empty SDL_Surface
+/** \brief Create new empty SDL_Surface
  *
  * \param width const int& width of new surface
  * \param height const int& height of new surface
