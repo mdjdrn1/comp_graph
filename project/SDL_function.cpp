@@ -90,13 +90,13 @@ void SDL::draw_pixel(SDL_Surface *surface, const int& x, const int& y, const uin
  * \return uint8_t* 3-item array with RGB values
  *
  */
-uint8_t* SDL::get_pixel2(SDL_Surface* surface, const int& x, const int& y)
+SDL::PixArr SDL::get_pixel2(SDL_Surface* surface, const int& x, const int& y)
 {
-    uint8_t* res = new uint8_t [3]; // res will contain RGB values
+    PixArr pixel_array; // res will contain RGB values
     Uint32 pixel = SDL::get_pixel(surface, x, y);
-    SDL_GetRGB(pixel, surface->format, res, res+1, res+2);
+    SDL_GetRGB(pixel, surface->format, &pixel_array[0], &pixel_array[1], &pixel_array[2]);
 
-    return res;
+    return std::move(pixel_array);
 }
 
 /** \brief creating new SDL_Surface from existing file

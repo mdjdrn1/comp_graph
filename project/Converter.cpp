@@ -145,7 +145,7 @@ void Converter::change_mode(mode new_mode, bool grayscale)
  * \return void
  *
  */
-void Converter::to_gray(uint8_t* pixel)  // pixel in BGR order
+void Converter::to_gray(PixArr& pixel)  // pixel in BGR order
 {
     // using luma formula to calculate "relative luminescence"
     uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);

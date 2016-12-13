@@ -29,7 +29,7 @@ void Converter::conv_7(const std::string& filename)
 
 	DataVector v1; // vector with converter RGB values (in BGR order)
 	DataVector v_temp;
-	uint8_t* pixel; // temporary rgbs
+	PixArr pixel; // temporary array of rgbs (3 uint8_ts)
 
 	for (int y = 0; y < image->h; ++y)
 	{
@@ -41,8 +41,6 @@ void Converter::conv_7(const std::string& filename)
 
             for(int p=2; p>=0; --p)
                 v1.push_back(pixel[p]);   // append read values
-
-            delete[] pixel;
 
 		    if (v1.size() >= 8)
             {

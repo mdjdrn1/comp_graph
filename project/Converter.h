@@ -24,6 +24,7 @@ class Converter
         using uint = unsigned int;
         using ushort = unsigned short;
         using DataVector = std::vector<uint8_t>;
+        using PixArr = SDL::PixArr; // PixArr = std::array<uint8_t, 3>
 
         #pragma pack(push, 0)	// set struct alignment to 0 bytes to force 14 bytes stuct size
         struct bard_header
@@ -59,7 +60,7 @@ class Converter
         void deconvert(const std::string& filename);
 
         void change_mode(mode new_mode, bool grayscale);    // change coding algorithm
-        void to_gray(uint8_t* pixel);
+        void to_gray(PixArr& pixel);
 };
 
 #endif // CONVERTER_H
