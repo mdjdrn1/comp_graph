@@ -61,6 +61,8 @@ void Converter::conv_7(const std::string& filename)
 			out_file.write(reinterpret_cast<char*>(&val), sizeof(val));
 		v_temp.erase(v_temp.begin(), v_temp.end()); // clean up already saved values
 	}
+
+	SDL::delete_surface(image);
 }
 
 

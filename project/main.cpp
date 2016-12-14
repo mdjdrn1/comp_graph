@@ -9,7 +9,7 @@ void test_conv(const std::vector<std::string>& name);
 
 int main(int argc, char** argv)
 {
-    freopen("CON", "w", stdout);
+//    freopen("CON", "w", stdout);  // enable console output on debug
 
     std::fstream log ("errors.log", std::ios_base::out | std::ios_base::trunc);
     std::cerr.rdbuf(log.rdbuf());   // redirect stderr to log file
