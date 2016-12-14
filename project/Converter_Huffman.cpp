@@ -9,7 +9,7 @@
  */
 void Converter::conv_huffman(const std::string& filename)
 {
-    // TODO
+	// TODO
 }
 
 
@@ -21,5 +21,5 @@ void Converter::conv_huffman(const std::string& filename)
  */
 void Converter::dconv_huffman(const std::string& filename)
 {
-    // TODO
+	// TODO
 }

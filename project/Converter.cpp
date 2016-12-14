@@ -16,22 +16,22 @@ Converter::~Converter()
  */
 void Converter::convert(const std::string& filename)
 {
-    switch(m_cur_mode)
-    {
-        case BITPACK:
-            conv_7(filename);
-            break;
-        case HUFF:
-            conv_huffman(filename);
-            break;
-        case RLE:
-            conv_rle(filename);
-            break;
-        default:
-            std::cerr << "Invalid convert mode.\n" << std::endl;
-            exit(EXIT_FAILURE);
-            break;
-    }
+	switch (m_cur_mode)
+	{
+	case BITPACK:
+		conv_7(filename);
+		break;
+	case HUFF:
+		conv_huffman(filename);
+		break;
+	case RLE:
+		conv_rle(filename);
+		break;
+	default:
+		std::cerr << "Invalid convert mode.\n" << std::endl;
+		exit(EXIT_FAILURE);
+		break;
+	}
 }
 
 /** \brief Run proper deconverting method for current mode
@@ -42,22 +42,22 @@ void Converter::convert(const std::string& filename)
  */
 void Converter::deconvert(const std::string& filename)
 {
-    switch(m_cur_mode)
-    {
-        case BITPACK:
-            dconv_7(filename);
-            break;
-        case HUFF:
-            dconv_huffman(filename);
-            break;
-        case RLE:
-            dconv_rle(filename);
-            break;
-        default:
-            std::cerr << "Invalid convert mode.\n" << std::endl;
-            exit(EXIT_FAILURE);
-            break;
-    }
+	switch (m_cur_mode)
+	{
+	case BITPACK:
+		dconv_7(filename);
+		break;
+	case HUFF:
+		dconv_huffman(filename);
+		break;
+	case RLE:
+		dconv_rle(filename);
+		break;
+	default:
+		std::cerr << "Invalid convert mode.\n" << std::endl;
+		exit(EXIT_FAILURE);
+		break;
+	}
 }
 
 
@@ -70,21 +70,20 @@ void Converter::deconvert(const std::string& filename)
  */
 void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels)
 {
-    for(int y=0; y < image->h; ++y)
-    {
-        for(int x=0; x < image->w; ++x)
-        {
-            if(pixels.size() < 3)
-            {
-                std::cerr << "Not enough values to draw whole pixel";
-                exit(EXIT_FAILURE);
-            }
-            SDL::draw_pixel(image, x, y, pixels[2], pixels[1], pixels[0]); // draw single pixel (pixels are in BGR order in decode_vals)
+	for (int y = 0; y < image->h; ++y)
+	{
+		for (int x = 0; x < image->w; ++x)
+		{
+			if (pixels.size() < 3)
+			{
+				std::cerr << "Not enough values to draw whole pixel";
+				exit(EXIT_FAILURE);
+			}
+			SDL::draw_pixel(image, x, y, pixels[2], pixels[1], pixels[0]); // draw single pixel (pixels are in BGR order in decode_vals)
 
-            auto end_it = std::next(pixels.begin(), 3);  // find next position after 3rd item
-            pixels.erase(pixels.begin(), end_it); // clean up
-        }
-    }
+			pixels.erase(pixels.begin(), pixels.begin() + 3); // clean up
+		}
+	}
 }
 
 /** \brief Create bard header
@@ -97,15 +96,15 @@ void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels)
  */
 Converter::bard_header Converter::create_header(SDL_Surface* image, mode compression_mode, int grayscale)
 {
-    bard_header new_header;
+	bard_header new_header;
 
-    new_header.offset = sizeof(bard_header);
-    new_header.width = image->w;
-    new_header.height = image->h;
-    new_header.grayscale = grayscale;
-    new_header.compression = static_cast<ushort>(compression_mode);
+	new_header.offset = sizeof(bard_header);
+	new_header.width = image->w;
+	new_header.height = image->h;
+	new_header.grayscale = grayscale;
+	new_header.compression = static_cast<ushort>(compression_mode);
 
-    return std::move(new_header);
+	return new_header;
 }
 
 
@@ -117,11 +116,11 @@ Converter::bard_header Converter::create_header(SDL_Surface* image, mode compres
  */
 Converter::bard_header Converter::read_header(std::fstream& input)
 {
-    bard_header new_header;
-    input.seekg(0, std::ios_base::beg); // set input file to begin
-    input.read(reinterpret_cast<char*>(&new_header), sizeof(new_header));
+	bard_header new_header;
+	input.seekg(0, std::ios_base::beg); // set input file to begin
+	input.read(reinterpret_cast<char*>(&new_header), sizeof(new_header));
 
-    return new_header;
+	return new_header;
 }
 
 
@@ -134,8 +133,8 @@ Converter::bard_header Converter::read_header(std::fstream& input)
  */
 void Converter::change_mode(mode new_mode, bool grayscale)
 {
-    m_cur_mode = new_mode;
-    m_grayscale = grayscale;
+	m_cur_mode = new_mode;
+	m_grayscale = grayscale;
 }
 
 
@@ -145,9 +144,9 @@ void Converter::change_mode(mode new_mode, bool grayscale)
  * \return void
  *
  */
-void Converter::to_gray(PixArr& pixel)  // pixel in BGR order
+void Converter::to_gray(PixArr& pixel) // pixel in BGR order
 {
-    // using luma formula to calculate "relative luminescence"
-    uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);
-    pixel[0] = pixel[1] = pixel[2] = luma;
+	// using luma formula to calculate "relative luminescence"
+	uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);
+	pixel[0] = pixel[1] = pixel[2] = luma;
 }
