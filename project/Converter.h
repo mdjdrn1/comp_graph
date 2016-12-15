@@ -70,7 +70,7 @@ public:
 	void convert(const std::string& filename);
 	void deconvert(const std::string& filename);
 
-	void change_mode(mode new_mode, bool grayscale); // change coding algorithm
+	void change_mode(const mode& new_mode, const bool& grayscale); // change coding algorithm
 	void to_gray(PixArr& pixel);    // convert pixel into grayscale
 };
 

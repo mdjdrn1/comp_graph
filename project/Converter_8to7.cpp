@@ -29,6 +29,8 @@ void Converter::conv_7(const std::string& filename)
 
 	DataVector v1; // vector with converter RGB values (in BGR order)
 	DataVector v_temp;
+
+	v1.reserve(10);
 	PixArr pixel; // temporary array of rgbs (3 uint8_ts)
 
 	for (int y = 0; y < image->h; ++y)
@@ -47,7 +49,7 @@ void Converter::conv_7(const std::string& filename)
 				v_temp = packer(v1);
 				for (uint8_t val : v_temp)
 					out_file.write(reinterpret_cast<char*>(&val), sizeof(val));
-				v_temp.erase(v_temp.begin(), v_temp.end()); // clean up already saved values
+				v_temp.clear(); // clean up already saved values
 			}
 		}
 	}
@@ -55,11 +57,11 @@ void Converter::conv_7(const std::string& filename)
 	// latest bits, that didn't fill v1 array fully
 	if (v1.size() > 0)
 	{
-		v1.resize(8);
+		v1.resize(8, 0x00);
 		v_temp = packer(v1);
 		for (uint8_t val : v_temp)
 			out_file.write(reinterpret_cast<char*>(&val), sizeof(val));
-		v_temp.erase(v_temp.begin(), v_temp.end()); // clean up already saved values
+		v_temp.clear(); // clean up already saved values
 	}
 
 	SDL::delete_surface(image);
@@ -82,6 +84,7 @@ Converter::DataVector Converter::packer(DataVector& vals)
 	}
 
 	DataVector v_output;
+	v_output.reserve(8);
 
 	uint8_t pack;
 	uint8_t x, p;
@@ -106,7 +109,7 @@ Converter::DataVector Converter::packer(DataVector& vals)
 	}
 	vals.erase(vals.begin(), vals.begin() + 8); // clean up already converted values
 
-	return v_output;
+	return std::move(v_output);  // rvo(?) if no move?
 }
 
 /** \brief Deconverting method for 8-to-7 bits mode
@@ -133,6 +136,10 @@ void Converter::dconv_7(const std::string& filename)
 	DataVector v_temp;
 	DataVector decode_vals; // after-conversion with all RGB channels for every pixel in file (order BGR)
 
+	raw_vals.reserve(10);
+	v_temp.reserve(10);
+	decode_vals.reserve((header.width * header.height) * 3 + 8);
+
 	uint8_t tmp;
 	while (!in_file.eof())
 	{
@@ -143,23 +150,24 @@ void Converter::dconv_7(const std::string& filename)
 			v_temp = unpacker(raw_vals); // decode 7 7-bit values into 8 8-bit values
 
 			std::move(v_temp.begin(), v_temp.end(), std::back_inserter(decode_vals)); // move v_temp values to the end of vector decode_vals
-			v_temp.erase(v_temp.begin(), v_temp.end()); // clean up temps
+			v_temp.clear(); // clean up temps
 		}
 	}
 
 	if (raw_vals.size() > 0) // additional iteration for pack of bytes that was not divisible by 7
 	{
-		raw_vals.resize(7);
+		raw_vals.resize(7, 0x00);
 		v_temp = unpacker(raw_vals);
 
 		std::move(v_temp.begin(), v_temp.end(), std::back_inserter(decode_vals)); // move v_temp values to the end of vector decode_vals
-		v_temp.erase(v_temp.begin(), v_temp.end()); // clean up
+		v_temp.clear(); // clean up
 	}
 
 	in_file.close(); // finished reading. clean up
 
 	SDL_Surface* output_image = SDL::new_empty_surface(header.width, header.height); // creates surface for drawuing pixels (size header.width x header.height)
 	draw_pixels(output_image, decode_vals); // drawing pixels here
+	decode_vals.clear();
 
 	std::string out_name = filename.substr(0, filename.size() - 5) + "_decoded.bmp"; // output file name
 	SDL_SaveBMP(output_image, (out_name).c_str()); // finally, save file to BMP extension
@@ -194,6 +202,7 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 	int n_p = -1, n_n = 0;
 
 	DataVector v_output;
+	v_output.reserve(8);
 
 	for (int i = 0; i < 7; i++)
 	{
@@ -248,5 +257,5 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 	auto end_it = std::next(vals.begin(), 7); // find next position after 7-th element
 	vals.erase(vals.begin(), end_it); // clean up already decoded values
 
-	return v_output;
+	return std::move(v_output); // rvo(?) if no move?
 }

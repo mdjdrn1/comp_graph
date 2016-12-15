@@ -68,20 +68,22 @@ void Converter::deconvert(const std::string& filename)
  * \return void
  *
  */
+
 void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels)
 {
-	for (int y = 0; y < image->h; ++y)
+    uint8_t *pixel = pixels.data();
+	for (uint y = 0; y < image->h; ++y)
 	{
-		for (int x = 0; x < image->w; ++x)
+		for (uint x = 0; x < image->w; ++x)
 		{
 			if (pixels.size() < 3)
 			{
 				std::cerr << "Not enough values to draw whole pixel";
 				exit(EXIT_FAILURE);
 			}
-			SDL::draw_pixel(image, x, y, pixels[2], pixels[1], pixels[0]); // draw single pixel (pixels are in BGR order in decode_vals)
+			SDL::draw_pixel(image, x, y, pixel[2], pixel[1], pixel[0]); // draw single pixel (pixels are in BGR order in decode_vals)
 
-			pixels.erase(pixels.begin(), pixels.begin() + 3); // clean up
+			pixel+=3;
 		}
 	}
 }
@@ -126,12 +128,12 @@ Converter::bard_header Converter::read_header(std::fstream& input)
 
 /** \brief Change mode of converter
  *
- * \param new_mode mode BITPACK, RLE or HUFF
- * \param grayscale bool 1 if converting image to grayscale, otherwise 0
+ * \param new_mode const mode& BITPACK, RLE or HUFF
+ * \param grayscale const bool& 1 if converting image to grayscale, otherwise 0
  * \return void
  *
  */
-void Converter::change_mode(mode new_mode, bool grayscale)
+void Converter::change_mode(const mode& new_mode, const bool& grayscale)
 {
 	m_cur_mode = new_mode;
 	m_grayscale = grayscale;
