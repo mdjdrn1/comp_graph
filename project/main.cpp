@@ -37,6 +37,7 @@ int main(int argc, char** argv)
 void test_conv(const std::vector<std::string>& name, int number_of_tests)
 {
     // CONVERSION TEST FOR BITPACK / NO GRAYSCALE
+    using uint = unsigned int;
     std::cout << std::setw(10) << "Cases: " << number_of_tests <<std::endl<<std::endl;
     Converter conv(Converter::BITPACK, 0);
     std::string output_name;
