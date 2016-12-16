@@ -64,28 +64,30 @@ void Converter::deconvert(const std::string& filename)
 /** \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
  *
  * \param image SDL_Surface* pixels-input surface
- * \param pixels DataVector& vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+ * \param pixels const DataVector& vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+ * \param x int& width value for image
+ * \param y int& y heigth value for image
  * \return void
  *
  */
-
-void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels)
+void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels, int& x, int& y)
 {
-    uint8_t *pixel = pixels.data();
-	for (uint y = 0; y < image->h; ++y)
-	{
-		for (uint x = 0; x < image->w; ++x)
-		{
-			if (pixels.size() < 3)
-			{
-				std::cerr << "Not enough values to draw whole pixel";
-				exit(EXIT_FAILURE);
-			}
-			SDL::draw_pixel(image, x, y, pixel[2], pixel[1], pixel[0]); // draw single pixel (pixels are in BGR order in decode_vals)
-
-			pixel+=3;
-		}
-	}
+    uint8_t* pixelptr = pixels.data();   // first pixels obj pointer
+     // calculate how many pixels (from DataVector pixels) are available to draw in surface
+    uint left_to_draw = (pixels.size() - pixels.size()%3) / 3;
+    while( y < image->h && x < image->w && left_to_draw > 0 )
+    {
+    	SDL::draw_pixel(image, x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
+        pixelptr+=3;
+    	++x;
+        --left_to_draw;
+        if(x == image->w)   // go to next line of image
+        {
+            x = 0;
+            ++y;
+        }
+    }
+    pixels.erase(pixels.begin(), pixels.end() - pixels.size()%3);   // remove drew pixels
 }
 
 /** \brief Create bard header

@@ -55,6 +55,7 @@ void Converter::conv_7(const std::string& filename)
 	}
 
 	// latest bits, that didn't fill v1 array fully
+	// also works as a guard when input image was smaller than 3 pixels in total
 	if (v1.size() > 0)
 	{
 		v1.resize(8, 0x00);
@@ -65,6 +66,7 @@ void Converter::conv_7(const std::string& filename)
 	}
 
 	SDL::delete_surface(image);
+	out_file.close();
 }
 
 
@@ -132,13 +134,16 @@ void Converter::dconv_7(const std::string& filename)
 	bard_header header = read_header(in_file); // reading bard_header
 	in_file.seekg(header.offset, std::ios_base::beg); // set file to read after header
 
+	SDL_Surface* output_image = SDL::new_empty_surface(header.width, header.height); // creates surface for drawuing pixels (size header.width x header.height)
+	int x=0, y=0; // init current pixel (in surface) position
+
 	DataVector raw_vals; // before-conversion vector. It will contain all "7-bit" values read from file and BEFORE being decoded into 8-bit values (in order BGR)
 	DataVector v_temp;
 	DataVector decode_vals; // after-conversion with all RGB channels for every pixel in file (order BGR)
 
 	raw_vals.reserve(10);
 	v_temp.reserve(10);
-	decode_vals.reserve((header.width * header.height) * 3 + 8);
+	decode_vals.reserve(10);
 
 	uint8_t tmp;
 	while (!in_file.eof())
@@ -151,23 +156,25 @@ void Converter::dconv_7(const std::string& filename)
 
 			std::move(v_temp.begin(), v_temp.end(), std::back_inserter(decode_vals)); // move v_temp values to the end of vector decode_vals
 			v_temp.clear(); // clean up temps
+
+			if(decode_vals.size() > 3)
+				draw_pixels(output_image, decode_vals, x, y);
 		}
 	}
 
-	if (raw_vals.size() > 0) // additional iteration for pack of bytes that was not divisible by 7
+	// additional iteration for pack of bytes that was not divisible by 7
+	// also works as a guard when input image was smaller than 3 pixels in total
+	if (raw_vals.size() > 0)
 	{
 		raw_vals.resize(7, 0x00);
 		v_temp = unpacker(raw_vals);
 
 		std::move(v_temp.begin(), v_temp.end(), std::back_inserter(decode_vals)); // move v_temp values to the end of vector decode_vals
 		v_temp.clear(); // clean up
+		draw_pixels(output_image, decode_vals, x, y);
 	}
 
 	in_file.close(); // finished reading. clean up
-
-	SDL_Surface* output_image = SDL::new_empty_surface(header.width, header.height); // creates surface for drawuing pixels (size header.width x header.height)
-	draw_pixels(output_image, decode_vals); // drawing pixels here
-	decode_vals.clear();
 
 	std::string out_name = filename.substr(0, filename.size() - 5) + "_decoded.bmp"; // output file name
 	SDL_SaveBMP(output_image, (out_name).c_str()); // finally, save file to BMP extension

@@ -61,7 +61,7 @@ private:
 	// 8 to 7 bits
 	void dconv_7(const std::string& filename);
 	DataVector unpacker(DataVector& vals); // auxiliary method
-	void draw_pixels(SDL_Surface* image, DataVector& pixels); // auxiliary method
+	void draw_pixels(SDL_Surface* image, DataVector& pixels, int& x, int& y); // auxiliary method
     // Huffman
 	void dconv_huffman(const std::string& filename);
 	// RLE

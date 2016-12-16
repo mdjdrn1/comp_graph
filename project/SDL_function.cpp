@@ -53,8 +53,7 @@ void SDL::draw_pixel(SDL_Surface* surface, const int& x, const int& y, const uin
 	Uint32 pixel = SDL_MapRGB(surface->format, R, G, B);
 
 	int bpp = surface->format->BytesPerPixel;
-	/* Here p is the address to the pixel we want to set */
-	Uint8* p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
+	Uint8* p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp; // ptr to pixel we want to set
 
 	switch (bpp)
 	{
