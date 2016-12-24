@@ -1,31 +1,33 @@
 #include "Converter.h"
 
+
 /** \brief Converting method for 8-to-7 bits mode
  *
  * \param filename const std::string& converted file path
- * \return void
  *
  */
 void Converter::conv_7(const std::string& filename)
 {
 	// load surface
-	SDL_Surface* image = SDL::new_bmp_surface(filename);
+	SDL_Surface* image = SDL_utils::new_bmp_surface(filename);
 
 	// assuming filename is in correct format e.g. "path\\foo bar xyz.bmp"
-	std::string out_name = filename.substr(0, filename.size() - 4) + ".bard";
-	std::fstream out_file(out_name.c_str(),
-	                      std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-
-	if (!out_file.is_open())
+	std::string outfile_name = filename.substr(0, filename.size() - 4) + ".bard";
+	std::fstream outfile(outfile_name.c_str(),
+	                                 std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
+	
+	if (!outfile.is_open())
 	{
 		std::cerr << "Couldn't open output convert file [converter() / conv_7()].\n" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
 	// create new header for coded file
-	bard_header new_header = create_header(image, BITPACK, 0);
-	out_file.write(reinterpret_cast<char*>(&new_header), sizeof(new_header));
-	out_file.seekg(new_header.offset, std::ios_base::beg);
+	bardHeader bard_header;
+	bard_header.create_from_SDLSurface(image, BITPACK, 0);
+
+	outfile.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
+	outfile.seekg(bard_header.offset, std::ios_base::beg);
 
 	DataVector v1; // vector with converter RGB values (in BGR order)
 	DataVector v_temp;
@@ -37,8 +39,8 @@ void Converter::conv_7(const std::string& filename)
 	{
 		for (int x = 0; x < image->w; ++x)
 		{
-			pixel = SDL::get_pixel2(image, x, y); // read RGB values
-			if (m_grayscale == 1)
+			pixel = SDL_utils::get_pixel(image, x, y); // read RGB values
+			if (m_is_grayscale == 1)
 				to_gray(pixel);
 
 			for (int p = 2; p >= 0; --p)
@@ -48,7 +50,7 @@ void Converter::conv_7(const std::string& filename)
 			{
 				v_temp = packer(v1);
 				for (uint8_t val : v_temp)
-					out_file.write(reinterpret_cast<char*>(&val), sizeof(val));
+					outfile.write(reinterpret_cast<char*>(&val), sizeof(val));
 				v_temp.clear(); // clean up already saved values
 			}
 		}
@@ -61,14 +63,13 @@ void Converter::conv_7(const std::string& filename)
 		v1.resize(8, 0x00);
 		v_temp = packer(v1);
 		for (uint8_t val : v_temp)
-			out_file.write(reinterpret_cast<char*>(&val), sizeof(val));
+			outfile.write(reinterpret_cast<char*>(&val), sizeof(val));
 		v_temp.clear(); // clean up already saved values
 	}
 
-	SDL::delete_surface(image);
-	out_file.close();
+	SDL_utils::delete_surface(image);
+	outfile.close();
 }
-
 
 /** \brief Convert pack of 8 bytes into 7 bytes
  *
@@ -77,7 +78,7 @@ void Converter::conv_7(const std::string& filename)
  * \return Converter::DataVector 7 converted values
  *
  */
-Converter::DataVector Converter::packer(DataVector& vals)
+Converter::DataVector Converter::packer(DataVector& vals) const
 {
 	if (vals.size() < 8)
 	{
@@ -90,7 +91,7 @@ Converter::DataVector Converter::packer(DataVector& vals)
 
 	uint8_t pack;
 	uint8_t x, p;
-	bool bit = 1;
+	bool bit;
 	for (int t = 0, n = 0; t < 7; ++t , ++n)
 	{
 		pack = vals[t];
@@ -111,31 +112,31 @@ Converter::DataVector Converter::packer(DataVector& vals)
 	}
 	vals.erase(vals.begin(), vals.begin() + 8); // clean up already converted values
 
-	return std::move(v_output);  // rvo(?) if no move?
+	return std::move(v_output); // rvo(?) if no move?
 }
 
 /** \brief Deconverting method for 8-to-7 bits mode
  *
  * \param filename const std::string& converted file path
- * \return void
  *
  */
 void Converter::dconv_7(const std::string& filename)
 {
 	// reading values from file
-	std::fstream in_file(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
+	std::fstream infile(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
 
-	if (!in_file.is_open())
+	if (!infile.is_open())
 	{
 		std::cerr << "Couldn't open input convert file [converter() / dconv_7()].\n" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	bard_header header = read_header(in_file); // reading bard_header
-	in_file.seekg(header.offset, std::ios_base::beg); // set file to read after header
+	bardHeader bard_header;
+	bard_header.create_from_encoded_file(infile); // reading bardHeader
+	infile.seekg(bard_header.offset, std::ios_base::beg); // set file to read after header
 
-	SDL_Surface* output_image = SDL::new_empty_surface(header.width, header.height); // creates surface for drawuing pixels (size header.width x header.height)
-	int x=0, y=0; // init current pixel (in surface) position
+	SDL_Surface* decoded_image = SDL_utils::new_empty_surface(bard_header.width, bard_header.height); // creates surface for drawuing pixels (size header.width x header.height)
+	int x = 0, y = 0; // init current pixel (in surface) position
 
 	DataVector raw_vals; // before-conversion vector. It will contain all "7-bit" values read from file and BEFORE being decoded into 8-bit values (in order BGR)
 	DataVector v_temp;
@@ -146,9 +147,9 @@ void Converter::dconv_7(const std::string& filename)
 	decode_vals.reserve(10);
 
 	uint8_t tmp;
-	while (!in_file.eof())
+	while (!infile.eof())
 	{
-		in_file.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)); // read single byte from file
+		infile.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)); // read single byte from file
 		raw_vals.push_back(tmp); // add it into before-conversion-vector
 		if (raw_vals.size() >= 7)
 		{
@@ -157,8 +158,8 @@ void Converter::dconv_7(const std::string& filename)
 			std::move(v_temp.begin(), v_temp.end(), std::back_inserter(decode_vals)); // move v_temp values to the end of vector decode_vals
 			v_temp.clear(); // clean up temps
 
-			if(decode_vals.size() > 3)
-				draw_pixels(output_image, decode_vals, x, y);
+			if (decode_vals.size() > 3)
+				draw_pixels(decoded_image, decode_vals, x, y);
 		}
 	}
 
@@ -171,15 +172,15 @@ void Converter::dconv_7(const std::string& filename)
 
 		std::move(v_temp.begin(), v_temp.end(), std::back_inserter(decode_vals)); // move v_temp values to the end of vector decode_vals
 		v_temp.clear(); // clean up
-		draw_pixels(output_image, decode_vals, x, y);
+		draw_pixels(decoded_image, decode_vals, x, y);
 	}
 
-	in_file.close(); // finished reading. clean up
+	infile.close(); // finished reading. clean up
 
-	std::string out_name = filename.substr(0, filename.size() - 5) + "_decoded.bmp"; // output file name
-	SDL_SaveBMP(output_image, (out_name).c_str()); // finally, save file to BMP extension
+	std::string decoded_file_name = filename.substr(0, filename.size() - 5) + "_decoded.bmp"; // output file name
+	SDL_SaveBMP(decoded_image, decoded_file_name.c_str()); // finally, save file to BMP extension
 
-	SDL::delete_surface(output_image); // clean up surface
+	SDL_utils::delete_surface(decoded_image); // clean up surface
 }
 
 /** \brief Deconvert 7 bytes into 8 bytes
@@ -189,21 +190,21 @@ void Converter::dconv_7(const std::string& filename)
  * \return Converter::DataVector 8 decoverted values
  *
  */
-Converter::DataVector Converter::unpacker(DataVector& vals)
+Converter::DataVector Converter::unpacker(DataVector& vals) const
 {
 	if (vals.size() < 7)
 	{
 		std::cerr << "Invalid vals size. It must equals at least 7." << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	bool bit = 1;
+	bool bit;
 	// pack_c current pack, pack_n next tmp pack, pack_p previous pack
 	uint8_t pack_c = 0x00, pack_n = 0x00, pack_p = 0x00;
 
 	/** current_to_next which bit copy from current pack to next pack,
 	 *  check_previous which bit copy from previous pack to current pack,
 	 *  insert_current on which position insert bit from previous pack	*/
-	int current_to_next = 0, insert_current = 0, check_previous = 0;
+	int current_to_next, insert_current, check_previous;
 
 	//n_p how many bits copy from previous pack to current pack, n_n how many bits copy from current pack to next pack
 	int n_p = -1, n_n = 0;
@@ -211,13 +212,13 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 	DataVector v_output;
 	v_output.reserve(8);
 
-	for (int i = 0; i < 7; i++)
+	for (int i = 0; i < 7; ++i)
 	{
 		pack_c = vals[i];
 		current_to_next = n_n;
 
 		//copy bit from current pack to next pack
-		for (int k = 0; k <= n_n; k++)
+		for (int k = 0; k <= n_n; ++k)
 		{
 			//check bit
 			bit = (pack_c >> current_to_next) & 1;
@@ -226,7 +227,7 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 				pack_n |= 1 << current_to_next;
 			else //set bit x to 0
 				pack_n &= ~(1 << current_to_next);
-			current_to_next--;
+			--current_to_next;
 		}
 
 		//move n_n bits in current pack in right
@@ -236,7 +237,7 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 		insert_current = 7;
 
 		//copy bit from previous pack to current pack
-		for (int k = 0; k <= n_p; k++)
+		for (int k = 0; k <= n_p; ++k)
 		{
 			//check bit
 			bit = (pack_p >> check_previous) & 1;
@@ -246,11 +247,11 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 			else //set bit x to 0
 				pack_c &= ~(1 << insert_current);
 
-			check_previous--;
-			insert_current--;
+			--check_previous;
+			--insert_current;
 		}
-		n_p++;
-		n_n++;
+		++n_p;
+		++n_n;
 		pack_p = pack_n;
 
 		//set bit number 0 in current pack to 0
@@ -264,5 +265,5 @@ Converter::DataVector Converter::unpacker(DataVector& vals)
 	auto end_it = std::next(vals.begin(), 7); // find next position after 7-th element
 	vals.erase(vals.begin(), end_it); // clean up already decoded values
 
-	return std::move(v_output); // rvo(?) if no move?
+	return std::move(v_output); // rvo, if no move (?)
 }
