@@ -53,7 +53,7 @@ private:
 	// coding methods
 	// 8 to 7 bits
 	void conv_7(const std::string& filename);
-	DataVector packer(DataVector& vals) const; // auxiliary method
+	DataVector packer(DataVector& raw_bytes) const; // auxiliary method
 	// Huffman
 	void conv_huffman(const std::string& filename);
 	// RLE
@@ -61,7 +61,7 @@ private:
 	// decoding methods
 	// 8 to 7 bits
 	void dconv_7(const std::string& filename);
-	DataVector unpacker(DataVector& vals) const; // auxiliary method
+	DataVector unpacker(DataVector& encoded_bytes) const; // auxiliary method
 	void draw_pixels(SDL_Surface* image, DataVector& pixels, int& x, int& y); // auxiliary method
 	// Huffman
 	void dconv_huffman(const std::string& filename);

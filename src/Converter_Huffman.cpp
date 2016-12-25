@@ -1,10 +1,9 @@
 #include "converter.hpp"
 
 
-/** \brief Donverting method for Huffman mode
- *
- * \param filename const std::string& converted file path
- *
+/**
+ * \brief Donverting method for Huffman mode
+ * \param filename converted file path
  */
 void Converter::conv_huffman(const std::string& filename)
 {
@@ -12,10 +11,9 @@ void Converter::conv_huffman(const std::string& filename)
 }
 
 
-/** \brief Deconverting method for Huffman mode
- *
- * \param filename const std::string& converted file path
- *
+/**
+ * \brief Deconverting method for Huffman mode
+ * \param filename converted file path
  */
 void Converter::dconv_huffman(const std::string& filename)
 {

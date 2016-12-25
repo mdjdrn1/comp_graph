@@ -2,14 +2,13 @@
 #include <iostream>
 
 
-/** \brief Get pixel RGB values from SDL_Surface
-*
-* \param surface SDL_Surface* image
-* \param x const int& x pos (indexing from 0)
-* \param y const int& y pos (indexing from 0)
-* \return SDL_utils::PixArr 3-item array with RGB values
-*
-*/
+/** 
+ * \brief Get pixel RGB values from SDL_Surface
+ * \param surface image
+ * \param x pos (indexing from 0)
+ * \param y pos (indexing from 0)
+ * \return 3-item array with RGB values
+ */
 SDL_utils::PixArr SDL_utils::get_pixel(SDL_Surface* surface, const int& x, const int& y)
 {
 	int bpp = surface->format->BytesPerPixel;
@@ -21,15 +20,14 @@ SDL_utils::PixArr SDL_utils::get_pixel(SDL_Surface* surface, const int& x, const
 	return std::move(pixel_array);
 }
 
-/** \brief Draw pixel into SDL_Surface
- *
- * \param surface SDL_Surface* image
- * \param x const int& x pos (indexing from 0)
- * \param y const int& y pos (indexing from 0)
- * \param R const uint8_t& R value
- * \param G const uint8_t& G value
- * \param B const uint8_t& B value
- *
+/** 
+ * \brief Draw pixel into SDL_Surface
+ * \param surface image
+ * \param x pos (indexing from 0)
+ * \param y pos (indexing from 0)
+ * \param R R value
+ * \param G G value
+ * \param B B value
  */
 void SDL_utils::draw_pixel(SDL_Surface* surface, const int& x, const int& y, const uint8_t& R, const uint8_t& G, const uint8_t& B)
 {
@@ -43,11 +41,10 @@ void SDL_utils::draw_pixel(SDL_Surface* surface, const int& x, const int& y, con
 	p[2] = (pixel >> 16) & 0xff;
 }
 
-/** \brief Create new SDL_Surface from existing BMP file
- *
- * \param filename const std::string& BMP file name
- * \return SDL_Surface* new surface
- *
+/** 
+ * \brief Create new SDL_Surface from existing BMP file
+ * \param filename BMP file name
+ * \return new surface
  */
 SDL_Surface* SDL_utils::new_bmp_surface(const std::string& filename)
 {
@@ -58,12 +55,11 @@ SDL_Surface* SDL_utils::new_bmp_surface(const std::string& filename)
 	return surface;
 }
 
-/** \brief Create new empty SDL_Surface
- *
- * \param width const int& width of new surface
- * \param height const int& height of new surface
- * \return SDL_Surface* new surface
- *
+/** 
+ * \brief Create new empty SDL_Surface
+ * \param width width of new surface
+ * \param height height of new surface
+ * \return new surface
  */
 SDL_Surface* SDL_utils::new_empty_surface(const int& width, const int& height)
 {
@@ -82,10 +78,9 @@ SDL_Surface* SDL_utils::new_empty_surface(const int& width, const int& height)
 	return surf;
 }
 
-/** \brief Delete properly SDL_Surface
- *
- * \param surface SDL_Surface* surface
- *
+/** 
+ * \brief Delete properly SDL_Surface
+ * \param surface deleted surface
  */
 void SDL_utils::delete_surface(SDL_Surface* surface)
 {

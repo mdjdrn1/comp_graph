@@ -5,10 +5,9 @@ Converter::Converter(mode choice, bool grayscale) : m_current_mode(choice), m_is
 {
 }
 
-/** \brief Run proper converting method for current mode
- *
- * \param filename const std::string& converted file path
- *
+/**
+ * \brief Run proper converting method for current mode
+ * \param filename path to file that will be converted
  */
 void Converter::convert(const std::string& filename)
 {
@@ -28,10 +27,9 @@ void Converter::convert(const std::string& filename)
 	}
 }
 
-/** \brief Run proper deconverting method for current mode
- *
- * \param filename const std::string& converted file name
- *
+/**
+ * \brief Run proper deconverting method for current mode
+ * \param filename path to file that will be deconverted
  */
 void Converter::deconvert(const std::string& filename)
 {
@@ -51,13 +49,12 @@ void Converter::deconvert(const std::string& filename)
 	}
 }
 
-/** \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
- *
- * \param image SDL_Surface* pixels-input surface
- * \param pixels const DataVector& vector with uint8_ts that represent pixels' RGB channels (in BRG order)
- * \param x int& width value for image
- * \param y int& y heigth value for image
- *
+/**
+ * \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
+ * \param image pixels-input surface
+ * \param pixels vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+ * \param x width value for image
+ * \param y heigth value for image
  */
 void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels, int& x, int& y)
 {
@@ -79,11 +76,10 @@ void Converter::draw_pixels(SDL_Surface* image, DataVector& pixels, int& x, int&
 	pixels.erase(pixels.begin(), pixels.end() - pixels.size() % 3); // remove drew pixels
 }
 
-/** \brief Change mode of converter
- *
- * \param new_mode const mode& BITPACK, RLE or HUFF
- * \param grayscale const bool& 1 if converting image to grayscale, otherwise 0
- *
+/**
+ * \brief Change mode of converter
+ * \param new_mode BITPACK, RLE or HUFF
+ * \param grayscale 1 if converting image to grayscale, otherwise 0
  */
 void Converter::change_mode(const mode& new_mode, const bool& grayscale)
 {
@@ -91,10 +87,9 @@ void Converter::change_mode(const mode& new_mode, const bool& grayscale)
 	m_is_grayscale = grayscale;
 }
 
-/** \brief Alter pixel into grayscale
- *
- * \param pixel PixArr  array of 3 uint8_ts representing RGB pixel (in BGR order)
- *
+/**
+ * \brief Alter pixel into grayscale
+ * \param pixel array of 3 uint8_ts representing RGB pixel (in BGR order)
  */
 void Converter::to_gray(PixArr& pixel) // pixel in BGR order
 {
@@ -106,14 +101,13 @@ void Converter::to_gray(PixArr& pixel) // pixel in BGR order
 
 // BARD HEADER METHODS' DEFINITIONS
 
-/** \brief Create bard header
-*
-* \param image SDL_Surface* image to create header from
-* \param compression_mode mode BITPACK, RLE or HUFF
-* \param grayscale int 1 for grayscale, otherwise 0
-* \return Converter::bardHeader new header
-*
-*/
+/**
+ * \brief Create bard header
+ * \param image image to create header from
+ * \param compression_mode mode BITPACK, RLE or HUFF
+ * \param grayscale_choice int 1 for grayscale, otherwise 0
+ * \return new header
+ */
 void Converter::bardHeader::create_from_SDLSurface(SDL_Surface* image, mode compression_mode, int grayscale_choice)
 {
 	offset = sizeof(bardHeader);
@@ -123,12 +117,11 @@ void Converter::bardHeader::create_from_SDLSurface(SDL_Surface* image, mode comp
 	compression = static_cast<ushort>(compression_mode);
 }
 
-/** \brief Readheader from bard file
-*
-* \param input std::fstream& input file stream
-* \return Converter::bardHeader read header
-*
-*/
+/**
+ * \brief Readheader from bard file
+ * \param input input file stream
+ * \return read header
+ */
 void Converter::bardHeader::create_from_encoded_file(std::fstream& input)
 {
 	input.seekg(0, std::ios_base::beg); // set input file to begin

@@ -8,14 +8,7 @@
 #include <string>
 #include "src/converter.hpp"
 
-
-/**
- * \brief Conversion/deconversion test for bitpack.
- * \param names container with file names
- * \param number_of_tests number of tests that will be executed for each file
- */
 void testConverter(const std::vector<std::string>& names, unsigned number_of_tests);
-
 
 int main(int argc, char** argv)
 {
@@ -46,6 +39,11 @@ int main(int argc, char** argv)
 }
 
 
+/**
+* \brief Conversion/deconversion test for bitpack.
+* \param names container with file names
+* \param number_of_tests number of tests that will be executed for each file
+*/
 void testConverter(const std::vector<std::string>& names, unsigned number_of_tests)
 {
 	using uint = unsigned int;
