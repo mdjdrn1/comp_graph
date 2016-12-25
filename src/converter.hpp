@@ -7,7 +7,8 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
-#include "SDL_utils.h"
+#include "sdl_utils.hpp"
+#include "error.hpp"
 
 class Converter
 {

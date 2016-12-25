@@ -1,4 +1,4 @@
-#include "Converter.h"
+#include "converter.hpp"
 
 
 Converter::Converter(mode choice, bool grayscale) : m_current_mode(choice), m_is_grayscale(grayscale)
@@ -24,9 +24,7 @@ void Converter::convert(const std::string& filename)
 		conv_rle(filename);
 		break;
 	default:
-		std::cerr << "Invalid convert mode.\n" << std::endl;
-		exit(EXIT_FAILURE);
-		break;
+		throw Error("In Converter::convert(): invalid convert mode.");	// should never happen, but just in case
 	}
 }
 
@@ -49,9 +47,7 @@ void Converter::deconvert(const std::string& filename)
 		dconv_rle(filename);
 		break;
 	default:
-		std::cerr << "Invalid convert mode.\n" << std::endl;
-		exit(EXIT_FAILURE);
-		break;
+		throw Error("In Converter::deconvert(): invalid convert mode.");	// should never happen, but just in case
 	}
 }
 

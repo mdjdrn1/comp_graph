@@ -1,4 +1,4 @@
-#include "Converter.h"
+#include "converter.hpp"
 
 
 /** \brief Converting method for RLE mode

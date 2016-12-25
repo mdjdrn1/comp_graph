@@ -4,6 +4,7 @@
 
 #include <SDL.h>
 #include <array>
+#include "error.hpp"
 
 namespace SDL_utils
 {

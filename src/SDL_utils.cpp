@@ -1,4 +1,4 @@
-#include "SDL_utils.h"
+#include "sdl_utils.hpp"
 #include <iostream>
 
 
@@ -43,9 +43,9 @@ void SDL_utils::draw_pixel(SDL_Surface* surface, const int& x, const int& y, con
 	p[2] = (pixel >> 16) & 0xff;
 }
 
-/** \brief Create new SDL_Surface from existing file
+/** \brief Create new SDL_Surface from existing BMP file
  *
- * \param filename const std::string& file name
+ * \param filename const std::string& BMP file name
  * \return SDL_Surface* new surface
  *
  */
@@ -53,10 +53,8 @@ SDL_Surface* SDL_utils::new_bmp_surface(const std::string& filename)
 {
 	SDL_Surface* surface = SDL_LoadBMP(filename.c_str());
 	if (!surface)
-	{
-		std::cerr << "Unable to load bitmap: " << SDL_GetError() << std::endl;
-		exit(EXIT_FAILURE);
-	}
+		throw Error("In SDL_utils::new_bmp_surface(): Unable to load bitmap from file: " + filename + ".");
+	
 	return surface;
 }
 
@@ -77,6 +75,10 @@ SDL_Surface* SDL_utils::new_empty_surface(const int& width, const int& height)
 	Uint32 Amask = 0xff000000; // alpha mask for the pixels
 
 	SDL_Surface* surf = SDL_CreateRGBSurface(0, width, height, bit_depth, std::move(Rmask), std::move(Gmask), std::move(Bmask), std::move(Amask));
+	
+	if (!surf)
+		throw Error("In SDL_utils::new_empty_surface(): failed to create new surface.");
+	
 	return surf;
 }
 

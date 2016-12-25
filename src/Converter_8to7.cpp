@@ -1,4 +1,4 @@
-#include "Converter.h"
+#include "converter.hpp"
 
 
 /** \brief Converting method for 8-to-7 bits mode
@@ -17,10 +17,7 @@ void Converter::conv_7(const std::string& filename)
 	                                 std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
 	
 	if (!outfile.is_open())
-	{
-		std::cerr << "Couldn't open output convert file [converter() / conv_7()].\n" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+		throw Error("In Converter::conv_7(): couldn't open output convert file.");
 
 	// create new header for coded file
 	bardHeader bard_header;
@@ -81,10 +78,7 @@ void Converter::conv_7(const std::string& filename)
 Converter::DataVector Converter::packer(DataVector& vals) const
 {
 	if (vals.size() < 8)
-	{
-		std::cerr << "Invalid vals size. It must equals 8." << std::endl;
-		exit(EXIT_FAILURE);
-	}
+		throw Error("In Converter::packer(): invalid vals size. It must equals (at least) 8.");
 
 	DataVector v_output;
 	v_output.reserve(8);
@@ -126,10 +120,7 @@ void Converter::dconv_7(const std::string& filename)
 	std::fstream infile(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
 
 	if (!infile.is_open())
-	{
-		std::cerr << "Couldn't open input convert file [converter() / dconv_7()].\n" << std::endl;
-		exit(EXIT_FAILURE);
-	}
+		throw Error("In Converter::dconv_7(): couldn't open input convert file.");
 
 	bardHeader bard_header;
 	bard_header.create_from_encoded_file(infile); // reading bardHeader
@@ -193,10 +184,8 @@ void Converter::dconv_7(const std::string& filename)
 Converter::DataVector Converter::unpacker(DataVector& vals) const
 {
 	if (vals.size() < 7)
-	{
-		std::cerr << "Invalid vals size. It must equals at least 7." << std::endl;
-		exit(EXIT_FAILURE);
-	}
+		throw Error("In Converter::unpacker(): invalid vals size. It must equals (at least) 8.");
+	
 	bool bit;
 	// pack_c current pack, pack_n next tmp pack, pack_p previous pack
 	uint8_t pack_c = 0x00, pack_n = 0x00, pack_p = 0x00;

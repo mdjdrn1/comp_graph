@@ -6,7 +6,7 @@
 #include <vector>
 #include <numeric>
 #include <string>
-#include "src\Converter.h"
+#include "src/converter.hpp"
 
 
 /**
@@ -19,22 +19,29 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 
 int main(int argc, char** argv)
 {
-	std::fstream logFileStream("log.txt", std::ios_base::out | std::ios_base::trunc);
-	std::cerr.rdbuf(logFileStream.rdbuf()); // redirect stderr to log file
-//	std::cout.rdbuf(sbuf.rdbuf());   // redirect stderr to log file
-
 	using StringVector = std::vector<std::string>;
 
-	StringVector sv = {"test\\pics\\1.bmp", "test\\pics\\2.bmp",
+	StringVector filenames = {"test\\pics\\1.bmp", "test\\pics\\2.bmp",
 		"test\\pics\\3.bmp", "test\\pics\\4.bmp",
 		"test\\pics\\5.bmp", "test\\pics\\6.bmp",
 		"test\\pics\\7.bmp"};
 
-	testConverter(sv, 30);
+	try
+	{
+		testConverter(filenames, 30);
+	}
+	catch (Error)
+	{
+		std::cout << "Exception catched." << std::endl
+			<< "Chceck errors log in error_log.txt file." << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	catch (...)
+	{
+		std::cout << "Unknown exception catched." << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
-	std::cerr.rdbuf(nullptr);
-//    std::cout.rdbuf(nullptr);
-	system("PAUSE");
 	return 0;
 }
 
