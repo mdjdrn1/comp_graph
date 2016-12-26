@@ -13,6 +13,9 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 
 int main(int argc, char** argv)
 {
+	std::fstream logfile("log.txt", std::ios_base::out | std::ios_base::trunc);
+	std::cout.rdbuf(logfile.rdbuf());   // redirect stdout to log file
+
 	using StringVector = std::vector<std::string>;
 
 	StringVector filenames = {"test\\pics\\1.bmp", "test\\pics\\2.bmp",
@@ -24,10 +27,10 @@ int main(int argc, char** argv)
 	{
 		testConverter(filenames, 30);
 	}
-	catch (Error)
+	catch (const Error&)
 	{
 		std::cout << "Exception catched." << std::endl
-			<< "Chceck errors log in error_log.txt file." << std::endl;
+			<< "Check errors log in error_log.txt file." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	catch (...)
@@ -36,6 +39,7 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
+	std::cout.rdbuf(nullptr);
 	return 0;
 }
 
