@@ -42,8 +42,8 @@ void Encoder::bitpack(const std::string& filename)
 			if (m_is_grayscale == 1)
 				SDL_utils::to_gray_pixel(pixel);
 
-			for (uint8_t& byte : pixel)
-				raw_bytes.push_back(std::move(byte)); // append read values
+			for (auto it = pixel.rbegin(); it != pixel.rend(); ++it)
+				raw_bytes.push_back(std::move(*it)); // append reversely read values
 
 			if (raw_bytes.size() >= 8)
 			{
