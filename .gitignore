@@ -29,8 +29,6 @@ SDL.dll
 *.suo
 *.user
 *.userosscache
-*.sln
-*.vcxproj
 *.sln.docstates
 *.vcxproj.filters
 
@@ -297,3 +295,7 @@ __pycache__/
 
 # Cake - Uncomment if you are using it
 # tools/
+
+# Solution files
+# *.sln
+# *.vcxproj
