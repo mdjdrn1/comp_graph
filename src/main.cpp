@@ -6,7 +6,8 @@
 #include <vector>
 #include <numeric>
 #include <string>
-#include "src/converter.hpp"
+#include "coder/encoder.hpp"
+#include "coder/decoder.hpp"
 
 void testConverter(const std::vector<std::string>& names, unsigned number_of_tests);
 
@@ -38,17 +39,18 @@ int main(int argc, char** argv)
 	return 0;
 }
 
-
 /**
-* \brief Conversion/deconversion test for bitpack.
-* \param names container with file names
-* \param number_of_tests number of tests that will be executed for each file
-*/
+ * \brief Conversion/deconversion test for bitpack.
+ * \param names container with file names
+ * \param number_of_tests number of tests that will be executed for each file
+ */
 void testConverter(const std::vector<std::string>& names, unsigned number_of_tests)
 {
 	using uint = unsigned int;
+	using ull = unsigned long long;
 	std::cout << std::setw(10) << "Cases: " << number_of_tests << std::endl << std::endl;
-	Converter conv(Converter::BITPACK, 0);
+	Encoder encoder(Encoder::BITPACK);
+	Decoder decoder(Encoder::BITPACK);
 	std::string output_name;
 	std::chrono::system_clock::time_point start, end;
 	using usVect = std::vector<std::chrono::microseconds::rep>;
@@ -56,7 +58,6 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 	std::chrono::microseconds::rep av;
 	usVect::iterator best, worst;
 
-	uint name_size = names.size();
 	for (const auto& name : names)
 	{
 		time.clear();
@@ -65,7 +66,7 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 		for (uint k = 0; k < number_of_tests; ++k)
 		{
 			start = std::chrono::system_clock::now();
-			conv.convert(name);
+			encoder.encode(name);
 			end = std::chrono::system_clock::now();
 			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 		}
@@ -86,7 +87,7 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 		for (uint k = 0; k < number_of_tests; ++k)
 		{
 			start = std::chrono::system_clock::now();
-			conv.deconvert(output_name);
+			decoder.decode(output_name);
 			end = std::chrono::system_clock::now();
 			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 		}

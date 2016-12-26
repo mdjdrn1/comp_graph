@@ -1,123 +1,20 @@
-#include "converter.hpp"
+/**
+* Bitpack decoder implementation
+*/
 
+#include "../decoder.hpp"
 
-/** 
- * \brief Converting method for 8-to-7 bits mode
- * \param filename converted file path
- */
-void Converter::conv_7(const std::string& filename)
-{
-	// load surface
-	SDL_Surface* image = SDL_utils::new_bmp_surface(filename);
-
-	// assuming filename is in correct format e.g. "path\\foo bar xyz.bmp"
-	std::string outfile_name = filename.substr(0, filename.size() - 4) + ".bard";
-	std::fstream outfile(outfile_name.c_str(),
-	                     std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-
-	if (!outfile.is_open())
-		throw Error("In Converter::conv_7(): couldn't open output convert file.");
-
-	// create new header for coded file
-	bardHeader bard_header;
-	bard_header.create_from_SDLSurface(image, BITPACK, 0);
-
-	outfile.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
-	outfile.seekg(bard_header.offset, std::ios_base::beg);
-
-	DataVector raw_bytes; // vector with to-be-converted RGB values (in BGR order)
-	DataVector encoded_bytes;
-
-	raw_bytes.reserve(10);
-	PixArr pixel; // temporary array of rgbs (3 uint8_ts)
-
-	for (int y = 0; y < image->h; ++y)
-	{
-		for (int x = 0; x < image->w; ++x)
-		{
-			pixel = SDL_utils::get_pixel(image, x, y); // read RGB values
-			if (m_is_grayscale == 1)
-				to_gray(pixel);
-
-			for (uint8_t& byte : pixel)
-				raw_bytes.push_back(std::move(byte)); // append read values
-
-			if (raw_bytes.size() >= 8)
-			{
-				encoded_bytes = packer(raw_bytes);
-				for (uint8_t& byte : encoded_bytes)
-					outfile.write(reinterpret_cast<char*>(&byte), sizeof(byte));
-				encoded_bytes.clear(); // clean up already saved values
-			}
-		}
-	}
-
-	// latest bits, that didn't fill v1 array fully
-	// also works as a guard when input image was smaller than 3 pixels in total
-	if (raw_bytes.size() > 0)
-	{
-		raw_bytes.resize(8, 0x00);
-		encoded_bytes = packer(raw_bytes);
-		for (uint8_t& byte : encoded_bytes)
-			outfile.write(reinterpret_cast<char*>(&byte), sizeof(byte));
-		encoded_bytes.clear(); // clean up already saved values
-	}
-
-	SDL_utils::delete_surface(image);
-	outfile.close();
-}
-
-/** 
- * \brief Convert pack of 8 bytes into 7 bytes
- * \param raw_bytes vector with uint8_ts. 
- * It must contain at least 8 values (bytes), 8 of them will be manipluated.
- * \return 7 converted values
- */
-Converter::DataVector Converter::packer(DataVector& raw_bytes) const
-{
-	if (raw_bytes.size() < 8)
-		throw Error("In Converter::packer(): invalid raw_bytes size. It must equals (at least) 8.");
-
-	DataVector v_output;
-	v_output.reserve(8);
-
-	uint8_t pack;
-	uint8_t x, p;
-	bool bit;
-	for (int t = 0, n = 0; t < 7; ++t , ++n)
-	{
-		pack = raw_bytes[t];
-		x = 7;
-		p = n;
-		for (int k = 0; k <= n; ++k , --p , --x)
-		{
-			//check bit
-			bit = (raw_bytes[t + 1] >> x) & 1;
-
-			if (bit) //set bit x to 1
-				pack |= 1 << p;
-			else //set bit x to 0
-				pack &= ~(1 << p);
-		}
-		raw_bytes[t + 1] <<= t + 1;
-		v_output.push_back(std::move(pack));
-	}
-	raw_bytes.erase(raw_bytes.begin(), raw_bytes.begin() + 8); // clean up already converted values
-
-	return std::move(v_output); // rvo(?) if no move?
-}
-
-/** 
- * \brief Deconverting method for 8-to-7 bits mode
- * \param filename converted file path
- */
-void Converter::dconv_7(const std::string& filename)
+/**
+* \brief Deconverting method for 8-to-7 bits mode
+* \param filename converted file path
+*/
+void Decoder::bitpack(const std::string& filename)
 {
 	// reading values from file
 	std::fstream infile(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
 
 	if (!infile.is_open())
-		throw Error("In Converter::dconv_7(): couldn't open input convert file.");
+		throw Error("In Decoder::bitpack(): couldn't open input convert file.");
 
 	bardHeader bard_header;
 	bard_header.create_from_encoded_file(infile); // reading bardHeader
@@ -172,23 +69,23 @@ void Converter::dconv_7(const std::string& filename)
 }
 
 /**
- * \brief Deconvert 7 bytes into 8 bytes
- * \param encoded_bytes vector with uint8_ts that represent pixels' RGB channels (in BRG order).
- * It must contain at least 7 values (bytes), 7 of them will be manipluated
- * \return 8 deconverted values
- */
-Converter::DataVector Converter::unpacker(DataVector& encoded_bytes) const
+* \brief Deconvert 7 bytes into 8 bytes
+* \param encoded_bytes vector with uint8_ts that represent pixels' RGB channels (in BRG order).
+* It must contain at least 7 values (bytes), 7 of them will be manipluated
+* \return 8 deconverted values
+*/
+Decoder::DataVector Decoder::unpacker(DataVector& encoded_bytes) const
 {
 	if (encoded_bytes.size() < 7)
-		throw Error("In Converter::unpacker(): invalid encoded_bytes size. It must equals (at least) 8.");
+		throw Error("In Decoder::unpacker(): invalid encoded_bytes size. It must equals (at least) 8.");
 
 	bool bit;
 	// pack_c current pack, pack_n next tmp pack, pack_p previous pack
 	uint8_t pack_c = 0x00, pack_n = 0x00, pack_p = 0x00;
 
 	/** current_to_next which bit copy from current pack to next pack,
-	 *  check_previous which bit copy from previous pack to current pack,
-	 *  insert_current on which position insert bit from previous pack	*/
+	*  check_previous which bit copy from previous pack to current pack,
+	*  insert_current on which position insert bit from previous pack	*/
 	int current_to_next, insert_current, check_previous;
 
 	// n_p how many bits copy from previous pack to current pack, n_n how many bits copy from current pack to next pack
@@ -251,4 +148,31 @@ Converter::DataVector Converter::unpacker(DataVector& encoded_bytes) const
 	encoded_bytes.erase(encoded_bytes.begin(), end_it); // clean up already decoded values
 
 	return std::move(v_output); // rvo, if no move (?)
+}
+
+/**
+* \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
+* \param image pixels-input surface
+* \param pixels vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+* \param x width value for image
+* \param y heigth value for image
+*/
+void Decoder::draw_pixels(SDL_Surface* image, DataVector& pixels, int& x, int& y)
+{
+	uint8_t* pixelptr = pixels.data(); // first pixels obj pointer
+									   // calculate how many pixels (from DataVector pixels) are available to draw in surface
+	ull left_to_draw = static_cast<ull>((pixels.size() - pixels.size() % 3) / 3);
+	while (y < image->h && x < image->w && left_to_draw > 0)
+	{
+		SDL_utils::draw_pixel(image, x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
+		pixelptr += 3;
+		++x;
+		--left_to_draw;
+		if (x == image->w) // go to next line of image
+		{
+			x = 0;
+			++y;
+		}
+	}
+	pixels.erase(pixels.begin(), pixels.end() - pixels.size() % 3); // remove drew pixels
 }

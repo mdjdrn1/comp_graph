@@ -86,3 +86,15 @@ void SDL_utils::delete_surface(SDL_Surface* surface)
 {
 	SDL_FreeSurface(surface);
 }
+
+
+/**
+* \brief Alter pixel into grayscale
+* \param pixel array of 3 uint8_ts representing RGB pixel (in BGR order)
+*/
+void SDL_utils::to_gray_pixel(PixArr& pixel) // pixel in BGR order
+{
+	// using luma formula to calculate "relative luminescence"
+	uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);
+	pixel[0] = pixel[1] = pixel[2] = luma;
+}
