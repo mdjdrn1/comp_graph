@@ -1,7 +1,6 @@
 #ifndef HUFFMAN_H
 #define HUFFMAN_H
 
-
 #include <memory>
 #include <string>
 #include <queue>
@@ -38,9 +37,12 @@ private:
 	using queue_huff = std::priority_queue < shared_ptr_huff, std::vector<shared_ptr_huff>, compare>;
 
 	queue_huff huffmanQueue;
-	void writeCode(bool &, short &, unsigned char &);
+	inline void writeCode(bool &, short &, unsigned char &);
 	void makeTree(int *);
 	void returnCode(const shared_ptr_huff &root);
+
+	// ENCODE
+	void saveEncode(std::string, std::string);
 
 	// hold huffman code
 	std::vector <bool> codeRepresentation;

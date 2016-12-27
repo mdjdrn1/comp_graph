@@ -49,14 +49,16 @@ void huffman::encode(std::string in_file_name, std::string out_file_name)
 	{
 		// lead colors
 		in_file.read((char*)&color, sizeof(uint8_t));
-
+		std::cout << (unsigned)color << ", ";
 		// counts frequency colors
 		++frequencyColor[color];
 	}
-
+	std::cout << std::endl;
+	in_file.close();
+	
 	// CREATE HUFFMAN CODE
 	makeTree(frequencyColor);
-	//std::cout << "ROZMIAR MAX: " << max << std::endl;
+	//std::cout << "\nROZMIAR MAX: " << max << std::endl;
 
 	// save header to file
 	std::ofstream out_file(out_file_name, std::ios::binary);
@@ -94,9 +96,13 @@ void huffman::encode(std::string in_file_name, std::string out_file_name)
 			out_file.write((char*)&k, sizeof(k));
 		}
 	}
-
 	out_file.close();
-	in_file.close();
+	///////////////////////////////////////////////////////////////////////
+	// Read bytes from bmp file and write huffman code to compress file
+	saveEncode(in_file_name, out_file_name);
+
+
+	
 }
 
 void huffman::decode(std::string in_file_name, std::string out_file_name)
@@ -119,20 +125,8 @@ void huffman::decode(std::string in_file_name, std::string out_file_name)
 		std::string code = decToBin(code_short);
 		for (int i = 0; i < number_of_zeros; ++i)
 			code = '0' + code;
-		//if(code_short)
-			std::cout << i << " " << code << " " << code_short << std::endl;
+//		std::cout << i << " " << code << " " << code_short << std::endl;
 	}
-}
-
-
-void huffman::writeCode(bool &bit, short &bitCount, unsigned char &temp)
-{
-	temp |= (bit << bitCount);
-		if (++bitCount == 8)
-		{
-			temp = 0;
-			bitCount = 0;
-		}
 }
 
 void huffman::makeTree(int *frequencyColor)
@@ -182,13 +176,80 @@ void huffman::returnCode(const shared_ptr_huff &root)
 		// std::cout << "Kolor: " << std::setw(3) << (unsigned)root->color << " Czestotliwosc: " << std::setw(6) << root->frequency << " Kod: ";
 		for (auto i : codeRepresentation)
 			root->code += std::to_string(i);
-		if (root->code.size() > max)
-			max = root->code.size();
+		//if (root->code.size() > max)
+		//	max = root->code.size();
 		vecHuffman.push_back(std::make_pair(root->color, root->code));
 		// std::cout << root->code << std::endl;
 	}
 }
 
+void huffman::saveEncode(std::string in_file_name, std::string out_file_name)
+{
+	std::cout << "Funkcja: saveEncode" << std::endl;
+	std::ifstream in_file(in_file_name, std::ios::binary);
+	if (in_file.fail())
+	{
+		std::cout << "Cannot open file! \n ";
+		exit(0);
+	}
+	in_file.seekg(54);
+
+	std::ofstream out_file(out_file_name, std::ios::binary | std::ios::app);
+	if (out_file.fail())
+	{
+		std::cout << "cannot open file! \n ";
+		exit(0);
+	}
+
+	//writeCode(bit, position, byte);
+	//position++;
+	//writeCode(bit, position, byte);
+	//std::cout << (unsigned) byte << std::endl;
+
+	// Main functions loop reading data frome file byte by byte and save huffman code bit by bit
+	bool bit;
+	unsigned char byte = 0;
+	short position = 7;
+	char test = ':';
+	out_file.write((char*)&test, sizeof(test));
+
+	while (!in_file.eof())
+	{
+		uint8_t color;
+		in_file.read((char*)&color, sizeof(color));
+		int couter = 0;
+		while (color != vecHuffman[couter].first)	// trzeba to zamienic na map bo w uj slabo to dziala O(n^2)
+			++couter;								// ew jakies pomysly na to prosze pisac :)
+		for (int i = 0; i < vecHuffman[couter].second.size(); ++i)
+		{
+			if (vecHuffman[couter].second[i] == '1')
+				bit = 1;
+			else
+				bit = 0;
+			
+			writeCode(bit, position, byte); // set bit
+			if (--position == -1) // send to file pack bits (byte)
+			{
+				out_file.write((char*)&byte, sizeof(byte));
+				std::cout << byte << std::endl;
+				position = 7;
+				byte = 0;
+			}
+
+		}
+	}
+	out_file.write((char*)&byte, sizeof(byte));
+}
+
+void huffman::writeCode(bool &bit, short &bitCount, unsigned char &temp)
+{
+	temp |= (bit << bitCount);
+	/*if (++bitCount == 8)
+	{
+		temp = 0;
+		bitCount = 0;
+	}*/
+}
 void huffman::TESTER()
 {
 

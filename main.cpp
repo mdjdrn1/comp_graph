@@ -10,7 +10,7 @@ int main()
 	std::cout << "//////// KODOWANIE HUFFMANA ////// " << std::endl;
 	std::cout << "////////////////////////////////// " << std::endl;
 	huffman TEST;
-	TEST.encode("3.bmp", "decode.drab");
+	TEST.encode("2.bmp", "decode.drab");
 	TEST.decode("decode.drab", "");
 	
 	
