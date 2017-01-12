@@ -1,12 +1,16 @@
 #include "huffman.h"
+#include "sdl_utils.h"
 
+#include <SDL.h>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <queue>
 #include <iomanip>
-#include <bitset>
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
 std::string decToBin(unsigned short n)
 {
 	std::string bin;
@@ -20,147 +24,184 @@ std::string decToBin(unsigned short n)
 	}
 	return bin;
 }
-
-huffman::huffman()
+//////////////////////////////////////////////////////////////////////////////////////////
+huffman::huffman(std::string in_file_name, std::string out_file_name)
 {
-	max = 0;
+	// check input file extesion
+	if (in_file_name.substr(in_file_name.find_last_of(".") + 1) == "bmp")
+	{
+		encode(in_file_name, out_file_name);
+	}
+	else if (in_file_name.substr(in_file_name.find_last_of(".") + 1) == "bard")
+	{
+		decode(in_file_name, out_file_name);
+	}
+	else
+	{
+		std::cout << "Wrong file extension! Try again!" << std::endl;
+	}
 }
-
-void huffman::encode(std::string in_file_name, std::string out_file_name)
+//////////////////////////////////////////////////////////////////////////////////////////
+huffman::encode::node::node(uint8_t color, int frequency)
+	: color(color), left(nullptr), right(nullptr), frequency(frequency)
+{
+	// ctor
+}
+//////////////////////////////////////////////////////////////////////////////////////////
+huffman::encode::encode(std::string in_file_name, std::string out_file_name)
 {
 	std::cout << "////////////////////////////////// " << std::endl;
 	std::cout << "//////      KOMPRESJA      /////// " << std::endl;
 	std::cout << "////////////////////////////////// " << std::endl;
 	// OPEN BMP FILE
-	std::ifstream in_file(in_file_name, std::ios::binary); 
-	if(in_file.fail())
-	{
-		std::cout << "Cannot open file! \n ";
-		exit(0);
-	}
-	in_file.seekg(54); 
+	//std::ifstream in_file(in_file_name, std::ios::binary);
+	//if (in_file.fail())
+	//{
+	//	std::cout << "Cannot open file! \n ";
+	//	exit(0);
+	//}
+	//in_file.seekg(54);
 
-	// COUNT FREQUENCY COLOR 
-	int frequencyColor[256];
-	memset(frequencyColor, 0, sizeof(int) * 256);
+	//// COUNT FREQUENCY COLOR 
+	//int frequencyColor[256];
+	//memset(frequencyColor, 0, sizeof(int) * 256);
+
+	//uint8_t color;
+
+	//unsigned int sizeFile = 0;
+	//while (!in_file.eof())
+	//{
+	//	// Lead colors
+	//	in_file.read((char*)&color, sizeof(uint8_t));
+	//	//std::cout << sizeFile << " " << (unsigned)color << ", " << std::endl;
+	//	++sizeFile;
+	//	// Counts frequency colors
+	//	++frequencyColor[color];
+	//}
+
+	std::array<uint8_t, 3> arr;
+	unsigned long long frequencyColor[256];
+	memset(frequencyColor, 0, sizeof(int) * 256); // POMYSLY NA SZYBSZE ZEROWANIE ?!
+	SDL_Surface *pics =  SDL_utils::new_bmp_surface(in_file_name);
+
+	size_t countsPixels = 0; // how many pixels is in file
+	for(int y = 0; y < pics->h; ++y)
+		for (int x = 0; x < pics->w; ++x)
+		{
+			arr = SDL_utils::get_pixel(pics, x, y);
+			++frequencyColor[arr[0]];
+			++frequencyColor[arr[1]];
+			++frequencyColor[arr[2]];
+			countsPixels += 3;
+			//std::cout << "Pixel  : " << (unsigned)arr[0] << " " << (unsigned)arr[1] << " " << (unsigned)arr[2] << " " << std::endl;
+		}
 	
-	uint8_t color;
-	while (!in_file.eof())
-	{
-		// lead colors
-		in_file.read((char*)&color, sizeof(uint8_t));
-		// std::cout << (unsigned)color << ", ";
-		// counts frequency colors
-		++frequencyColor[color];
-	}
-	std::cout << std::endl;
-	in_file.close();
-	
-	// CREATE HUFFMAN CODE
+	//// CREATE HUFFMAN CODE
 	makeTree(frequencyColor);
-	//std::cout << "\nROZMIAR MAX: " << max << std::endl;
 
-	// save header to file
+	/////////////////////////////////////////////////////////////////////////
+	// Save header to file
+	/////////////////////////////////////////////////////////////////////////
 	std::ofstream out_file(out_file_name, std::ios::binary);
 	if (out_file.fail())
 	{
 		std::cout << "cannot open file! \n ";
 		exit(0);
 	}
-	std::sort(vecHuffman.begin(), vecHuffman.end());
-	//for (int i = 0; i < vecHuffman.size(); ++i)
-	//	std::cout << (unsigned) vecHuffman[i].first << " " << vecHuffman[i].second << std::endl;
 
-	for (unsigned short i = 0, j = 0, k = 0; i < 256; ++i)
+	///////////////////////
+	int h = pics->h, w = pics->w;
+	out_file.write((char*)&countsPixels, sizeof(countsPixels));
+	out_file.write((char*)&h, sizeof(h));
+	out_file.write((char*)&w, sizeof(w));
+	////////////////
+	int max = 0;
+	for (unsigned short i = 0, code; i < 256; ++i)
 	{
-		if (i == vecHuffman[j].first)
+		if (!huffmanCode[i].empty())
 		{
 			// binary huffman code to decimal value
 			std::string::size_type buffer = 0;
-			unsigned short code = std::stoul(vecHuffman[j].second, &buffer, 2);
-			uint8_t number_of_zeros = 0;
-			for (size_t i = 0; i < vecHuffman[j].second.size(); ++i)
-				if (vecHuffman[j].second[i] == '0')
-					++number_of_zeros;
-				else
-					break;
+			if (max < huffmanCode[i].size())
+				max = huffmanCode[i].size();
+			//std::cout << i << " " << huffmanCode[i] << std::endl;
 
-			out_file.write((char*)&number_of_zeros, sizeof(number_of_zeros));	// send: how many zeros is in befor decimal code	(1 byte)
-			out_file.write((char*)&code, sizeof(code));							// send: huffman code(decimal)						(2 bytes)
-			//std::cout << i << " " << vecHuffman[j].second << " " << code << std::endl;
-			j++;
+			huffmanCode[i] = '1' + huffmanCode[i];
+			code = std::stoi(huffmanCode[i], &buffer, 2);
+
+			//std::cout << i << " " << huffmanCode[i] << " " << code << std::endl;
+			out_file.write((char*)&code, sizeof(code));
 		}
 		else
-		{
-			out_file.write((char*)&k, sizeof(uint8_t));
-			out_file.write((char*)&k, sizeof(k));
-		}
+			out_file.write((char*)&(code = 0), sizeof(code));
 	}
-	out_file.close();
-	///////////////////////////////////////////////////////////////////////
-	// Read bytes from bmp file and write huffman code to compress file
-	saveEncode(in_file_name, out_file_name);
-
-
 	
-}
-
-void huffman::decode(std::string in_file_name, std::string out_file_name)
-{
-	std::cout << "////////////////////////////////// " << std::endl;
-	std::cout << "//////     DEKOMPRESJA     /////// " << std::endl;
-	std::cout << "////////////////////////////////// " << std::endl;
-	std::ifstream in_file(in_file_name, std::ios::binary);
-	std::map <std::string, uint8_t> mapCode;
-
-	// read huffman code form file
-	for (int i = 0; i < 256; ++i)
-	{
-		unsigned short code_short; 
-		uint8_t number_of_zeros;
-
-		in_file.read((char*)&number_of_zeros, sizeof(number_of_zeros)); 
-		in_file.read((char*)&code_short, sizeof(code_short));
-		
-		std::string code = decToBin(code_short);
-		for (int i = 0; i < number_of_zeros; ++i)
-			code = '0' + code;
-		
-		if (!code.empty())
-			mapCode.insert({code, i});
-	}
-	//for (auto &it : mapCode)
-	//	std::cout << it.first << " " << (unsigned) it.second << std::endl;
-	std::string temp_color;
-	while (!in_file.eof())
-	{
-		uint8_t _color; 
-		std::string color;
-		in_file.read((char*)&_color, sizeof(_color));
-		color = decToBin(_color);
-		while (color.size() != 8)
-			color = '0' + color;
-		// std::cout << color << std::endl;
-		for (int i = 0; i < color.size(); ++i)
+	/////////////////////////////////////////////////////////////////////////
+	// Read bytes from bmp file and write huffman code to compress file
+	/////////////////////////////////////////////////////////////////////////
+	// Main functions loop reading data frome file byte by byte and save huffman code bit by bit
+	/////////////////////////////////////////////////////////////////////////
+	bool bit;
+	unsigned char byte = 0;
+	short position = 7;
+	for (int y = 0; y < pics->h; ++y) // ITS A PRANK BRO
+		for (int x = 0; x < pics->w; ++x)
 		{
-			temp_color += color[i];
-			if (mapCode.count(temp_color) > 0)
+			arr = SDL_utils::get_pixel(pics, x, y);
+			for (int index = 0; index < 3; ++index)
 			{
-				// std::cout << (unsigned) mapCode.find(temp_color)->second << std::endl;
-				temp_color.clear();
+				for (int i = 1; i < huffmanCode[arr[index]].size(); ++i)
+						{
+							if (huffmanCode[arr[index]][i] == '1')
+								bit = 1;
+							else
+								bit = 0;
+							byte |= (bit << position);
+							if (--position == -1)
+							{
+								out_file.write((char*)&byte, sizeof(byte));
+								//std::cout << (unsigned)byte << std::endl;
+								position = 7; 
+								byte = 0;
+							}
+						}
 			}
-
 		}
-	}
-}
+	out_file.write((char*)&byte, sizeof(byte)); // last bajt with some garbage
+			
+	//while (!in_file.eof())
+	//{
+	//	uint8_t color;
+	//	in_file.read((char*)&color, sizeof(color));
+	//	for (int i = 1; i < huffmanCode[color].size(); ++i)
+	//	{
+	//		if (huffmanCode[color][i] == '1')
+	//			bit = 1;
+	//		else
+	//			bit = 0;
+	//		byte |= (bit << position);
+	//		if (--position == -1)
+	//		{
+	//			out_file.write((char*)&byte, sizeof(byte));
+	//			//std::cout << (unsigned)byte << std::endl;
+	//			position = 7; 
+	//			byte = 0;
+	//		}
+	//	}
+	//}
 
-void huffman::makeTree(int *frequencyColor)
-{
+	//out_file.write((char*)&byte, sizeof(byte)); // last bajt with some garbage
+
+	//std::cout << "MAXYMALNY ROZMIAR: " << max << std::endl;
+}
+//////////////////////////////////////////////////////////////////////////////////////////
+void huffman::encode::makeTree(unsigned long long *frequencyColor)
+{ 
 	for (int i = 0; i < 256; ++i)
 		if (frequencyColor[i])
 		{
 			// save data like color and frequency 
-			auto root = std::make_shared<huffman::node>(i, frequencyColor[i]);
+			auto root = std::make_shared<encode::node>(i, frequencyColor[i]);
 
 			// create node 
 			huffmanQueue.push(root);
@@ -175,7 +216,7 @@ void huffman::makeTree(int *frequencyColor)
 		auto rightNode = huffmanQueue.top();
 		huffmanQueue.pop();
 
-		auto root = std::make_shared<huffman::node>(256, leftNode->frequency + rightNode->frequency);
+		auto root = std::make_shared<encode::node>(256, leftNode->frequency + rightNode->frequency);
 		root->left = leftNode;
 		root->right = rightNode;
 		huffmanQueue.push(root);
@@ -183,8 +224,8 @@ void huffman::makeTree(int *frequencyColor)
 
 	returnCode(huffmanQueue.top());
 }
-
-void huffman::returnCode(const shared_ptr_huff &root)
+//////////////////////////////////////////////////////////////////////////////////////////
+void huffman::encode::returnCode(const shared_ptr_huff & root)
 {
 	// create code huffman 
 	if ((root->left != nullptr) && (root->right != nullptr))
@@ -198,89 +239,118 @@ void huffman::returnCode(const shared_ptr_huff &root)
 	}
 	else
 	{
-		// std::cout << "Kolor: " << std::setw(3) << (unsigned)root->color << " Czestotliwosc: " << std::setw(6) << root->frequency << " Kod: ";
 		for (auto i : codeRepresentation)
 			root->code += std::to_string(i);
-		//if (root->code.size() > max)
-		//	max = root->code.size();
-		vecHuffman.push_back(std::make_pair(root->color, root->code));
-		// std::cout << root->code << std::endl;
+		huffmanCode[root->color] = root->code;
 	}
 }
-
-void huffman::saveEncode(std::string in_file_name, std::string out_file_name)
+//////////////////////////////////////////////////////////////////////////////////////////
+huffman::decode::decode(std::string in_file_name, std::string out_file_name)
 {
-	std::cout << "Funkcja: saveEncode" << std::endl;
+	std::cout << "////////////////////////////////// " << std::endl;
+	std::cout << "//////     DEKOMPRESJA     /////// " << std::endl;
+	std::cout << "////////////////////////////////// " << std::endl;
+	
 	std::ifstream in_file(in_file_name, std::ios::binary);
-	if (in_file.fail())
+	//std::ofstream out_file(out_file_name, std::ios::binary);
+	/// POZA KONTROLO :D
+	std::map <std::string, uint8_t> mapCode;
+	size_t countsPixels;
+	int w, h;
+	in_file.read((char*)&countsPixels, sizeof(countsPixels)); // read quantity pixels
+	in_file.read((char*)&h, sizeof(int));
+	in_file.read((char*)&w, sizeof(int));
+	for (int i = 0; i < 256; ++i)
 	{
-		std::cout << "Cannot open file! \n ";
-		exit(0);
-	}
-	in_file.seekg(54);
-
-	std::ofstream out_file(out_file_name, std::ios::binary | std::ios::app);
-	if (out_file.fail())
-	{
-		std::cout << "cannot open file! \n ";
-		exit(0);
-	}
-
-	// Main functions loop reading data frome file byte by byte and save huffman code bit by bit
-	bool bit;
-	unsigned char byte = 0;
-	short position = 7;
-
-	while (!in_file.eof())
-	{
-		uint8_t color;
-		in_file.read((char*)&color, sizeof(color));
-		int couter = 0;
-		while (color != vecHuffman[couter].first)	// trzeba to zamienic na map bo w uj slabo to dziala O(n^2)
-			++couter;								// ew jakies pomysly na to prosze pisac :)
-		for (int i = 0; i < vecHuffman[couter].second.size(); ++i)
+		unsigned short _code;
+		in_file.read((char*)&_code, sizeof(_code));
+		std::string code = decToBin(_code);
+		
+		if (!code.empty())
 		{
-			if (vecHuffman[couter].second[i] == '1')
-				bit = 1;
-			else
-				bit = 0;
-			
-			writeCode(bit, position, byte); // set bit
-			if (--position == -1) // send to file pack bits (byte)
-			{
-				out_file.write((char*)&byte, sizeof(byte));
-				std::cout << byte << std::endl;
-				position = 7;
-				byte = 0;
-			}
-
+			code.erase(code.begin());
+			//std::cout << i << ". " << code << std::endl;
+			mapCode.insert({code, i });
 		}
 	}
-	out_file.write((char*)&byte, sizeof(byte));
-}
+	//std::cout << "Wysokosc: " << h << " Szerokosc: " << w << std::endl;
 
-void huffman::writeCode(bool &bit, short &bitCount, unsigned char &temp)
-{
-	temp |= (bit << bitCount);
-	/*if (++bitCount == 8)
+	//for (const auto &p : mapCode) 
+	//	std::cout << "KOD[" << p.first << "] - kolor: " << (unsigned) p.second << '\n';
+	//////////////////////////////////////////////////////////
+	int x = 0, y = 0;
+	SDL_Surface* decoded_image = SDL_utils::new_empty_surface(w, h);
+	
+
+	std::string temp_color;
+	int index = 0;
+	uint8_t RGB[3];
+	while (!in_file.eof())
 	{
-		temp = 0;
-		bitCount = 0;
-	}*/
-}
-void huffman::TESTER()
-{
+		uint8_t _color;
+		std::string color;
+		in_file.read((char*)&_color, sizeof(_color));
+		color = decToBin(_color);
+		
+		while (color.size() != 8)
+			color = '0' + color;
+		//std::cout << color << std::endl;
 
-}
+		for (int i = 0; i < color.size(); ++i)
+				{
+					temp_color += color[i];
+					if (mapCode.count(temp_color) > 0 && countsPixels--) // Przydaly sie systemy xdddd
+					{
+						
+						RGB[index++] = mapCode.find(temp_color)->second;
+						
+						if (index == 3)
+						{
+							SDL_utils::draw_pixel(decoded_image, x, y, RGB[0], RGB[1], RGB[2]);
+							++x;
+							if (x == w)
+							{
+								x = 0;
+								++y;
+							}
+							//std::cout << (unsigned)RGB[0] << " " << (unsigned)RGB[1] << " " << (unsigned)RGB[2] << std::endl;
+							index = 0;
+						}
+						//std::cout << (unsigned) mapCode.find(temp_color)->second << std::endl;
+						//out_file.write((char*)&mapCode.find(temp_color)->second, sizeof(mapCode.find(temp_color)->second));
+						temp_color.clear();
+					}
+				}
+		
+		
 
-huffman::~huffman()
-{
-		// next time :)
-}
+		
+	}
+	SDL_SaveBMP(decoded_image, out_file_name.c_str()); // finally, save file to BMP extension
+	SDL_utils::delete_surface(decoded_image); // clean up surface
 
-huffman::node::node(uint8_t color, int frequency)
-	: color(color), left(nullptr), right(nullptr), frequency(frequency)
-{
-	// ctor
-}
 
+	///////////////////////////////////////////////
+	//std::string temp_color;
+	//while (!in_file.eof())
+	//{
+	//	uint8_t _color;
+	//	std::string color;
+	//	in_file.read((char*)&_color, sizeof(_color));
+	//	color = decToBin(_color);
+	//	while (color.size() != 8)
+	//		color = '0' + color;
+	//	//std::cout << color << std::endl;
+	//	for (int i = 0; i < color.size(); ++i)
+	//	{
+	//		temp_color += color[i];
+	//		if (mapCode.count(temp_color) > 0)
+	//		{
+	//			//std::cout << (unsigned) mapCode.find(temp_color)->second << std::endl;
+	//			out_file.write((char*)&mapCode.find(temp_color)->second, sizeof(mapCode.find(temp_color)->second));
+	//			temp_color.clear();
+	//		}
+	//	}
+	//}
+}
+//////////////////////////////////////////////////////////////////////////////////////////
