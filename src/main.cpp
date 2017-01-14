@@ -6,15 +6,14 @@
 #include <vector>
 #include <numeric>
 #include <string>
-#include "coder/encoder.hpp"
-#include "coder/decoder.hpp"
+#include "converter/converter.hpp"
 
-void testConverter(const std::vector<std::string>& names, unsigned number_of_tests);
+void testConverter(const std::vector<std::string>& names, const Converter::mode& mode, unsigned number_of_tests);
 
 int main(int argc, char** argv)
 {
 	std::fstream logfile("log.txt", std::ios_base::out | std::ios_base::trunc);
-	std::cout.rdbuf(logfile.rdbuf());   // redirect stdout to log file
+	std::cout.rdbuf(logfile.rdbuf()); // redirect stdout to log file
 
 	using StringVector = std::vector<std::string>;
 
@@ -25,7 +24,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		testConverter(filenames, 30);
+		testConverter(filenames, Converter::mode::BITPACK, 1);
 	}
 	catch (const Error&)
 	{
@@ -48,14 +47,12 @@ int main(int argc, char** argv)
  * \param names container with file names
  * \param number_of_tests number of tests that will be executed for each file
  */
-void testConverter(const std::vector<std::string>& names, unsigned number_of_tests)
+void testConverter(const std::vector<std::string>& names, const Converter::mode& mode, unsigned number_of_tests)
 {
 	using uint = unsigned int;
 	using ull = unsigned long long;
 	std::cout << std::setw(10) << "Cases: " << number_of_tests << std::endl << std::endl;
-	Encoder encoder(Encoder::BITPACK);
-	Decoder decoder(Encoder::BITPACK);
-	std::string output_name;
+	Converter converter;
 	std::chrono::system_clock::time_point start, end;
 	using usVect = std::vector<std::chrono::microseconds::rep>;
 	usVect time;
@@ -70,7 +67,7 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 		for (uint k = 0; k < number_of_tests; ++k)
 		{
 			start = std::chrono::system_clock::now();
-			encoder.encode(name);
+			converter.encode(name, mode);
 			end = std::chrono::system_clock::now();
 			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 		}
@@ -86,12 +83,12 @@ void testConverter(const std::vector<std::string>& names, unsigned number_of_tes
 		time.clear();
 		time.reserve(number_of_tests);
 
-		output_name = name.substr(0, name.size() - 3) + "bard";
+		std::string new_name = name.substr(0, name.size() - 3) + "bard";
 
 		for (uint k = 0; k < number_of_tests; ++k)
 		{
 			start = std::chrono::system_clock::now();
-			decoder.decode(output_name);
+			converter.decode(new_name, mode);
 			end = std::chrono::system_clock::now();
 			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 		}
