@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		testConverter(filenames, Converter::mode::HUFF, 1);
+		testConverter(filenames, Converter::mode::RLE_EN, 1);
 	}
 	catch (const Error&)
 	{

@@ -1,10 +1,6 @@
 #include <string>
 #include "bitpack.hpp"
 
-Bitpack::Bitpack()
-{
-}
-
 void Bitpack::encode(const std::string& filename, const bool& grayscale)
 {
 	// load surface
@@ -18,7 +14,7 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 		throw Error("In Bitpack::encode(): couldn't open output convert file.");
 
 	// create new header for coded file
-	Header bard_header(image, BITPACK, 0);
+	Header bard_header(image, BITPACK, grayscale);
 
 	outfile.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
 	outfile.seekg(bard_header.offset, std::ios_base::beg);
@@ -108,7 +104,7 @@ void Bitpack::decode(const std::string& filename)
 	// reading values from file
 	std::fstream infile(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
 	if (!infile.is_open())
-		throw Error("In Bitpack::bitpack(): couldn't open input convert file.");
+		throw Error("In Bitpack::decode(): couldn't open input convert file.");
 
 	Header bard_header(infile); // reading Header
 	infile.seekg(bard_header.offset, std::ios_base::beg); // set file to read after header

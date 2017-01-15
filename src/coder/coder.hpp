@@ -32,6 +32,7 @@ public:
 		int height;
 		bool grayscale; // 0 or 1
 		ushort compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
+		Header(const int& h, const int& w, const mode& compression_mode, const bool& grayscale_choice);
 		Header(SDL_Surface* image, const mode& compression_mode, const bool& grayscale_choice);
 		explicit Header(std::fstream& input);
 	};
@@ -46,6 +47,7 @@ protected:
 	std::string encoded_filename(const std::string& input_filename) const;
 	std::string decoded_filename(const std::string& input_filename) const;
 	void draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y); // auxiliary method
+	void draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y); // auxiliary method
 };
 
 

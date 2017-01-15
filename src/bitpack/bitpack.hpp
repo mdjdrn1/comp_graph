@@ -16,7 +16,7 @@ public:
 	using DataVector = std::vector<uint8_t>; // bytes vector
 	using Pixel = SDL_utils::Pixel; // Pixel = std::array<uint8_t, 3>
 
-	Bitpack();
+	Bitpack() = default;
 	~Bitpack() = default;
 	Bitpack(const Bitpack&) = default;
 	Bitpack(Bitpack&&) = default;

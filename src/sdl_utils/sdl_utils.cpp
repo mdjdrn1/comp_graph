@@ -48,6 +48,7 @@ void SDL_utils::draw_pixel(SDL_Surface* surface, const int& x, const int& y, con
  */
 SDL_Surface* SDL_utils::new_bmp_surface(const std::string& filename)
 {
+	// TODO: return unique_ptr
 	SDL_Surface* surface = SDL_LoadBMP(filename.c_str());
 	if (!surface)
 		throw Error("In SDL_utils::new_bmp_surface(): Unable to load bitmap from file: " + filename + ".");
