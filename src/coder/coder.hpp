@@ -42,7 +42,7 @@ public:
 	virtual void encode(const std::string& filename, const bool& grayscale) = 0;
 	virtual void decode(const std::string& filename) = 0;
 
-	protected:
+protected:
 	std::string encoded_filename(const std::string& input_filename) const;
 	std::string decoded_filename(const std::string& input_filename) const;
 	void draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y); // auxiliary method

@@ -6,7 +6,7 @@
 #include <bitset>
 #include "Huffman.hpp"
 
-Huffman::Huffman() : max(0)
+Huffman::Huffman()
 {
 }
 
@@ -80,7 +80,6 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 
 void Huffman::decode(const std::string& filename)
 {
-	std::cout << "Huffman decode\n";
 	std::ifstream in_file(filename, std::ios::binary);
 	std::map<std::string, uint8_t> mapCode;
 

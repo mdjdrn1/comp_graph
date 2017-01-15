@@ -94,7 +94,7 @@ void SDL_utils::delete_surface(SDL_Surface* surface)
 */
 void SDL_utils::to_gray_pixel(Pixel& pixel) // pixel in BGR order
 {
-	// using luma Coder to calculate "relative luminescence"
+	// using luma formula to calculate "relative luminescence"
 	uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);
 	pixel[0] = pixel[1] = pixel[2] = luma;
 }

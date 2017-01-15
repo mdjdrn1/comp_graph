@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		testConverter(filenames, Converter::mode::BITPACK, 1);
+		testConverter(filenames, Converter::mode::HUFF, 1);
 	}
 	catch (const Error&)
 	{
@@ -84,7 +84,6 @@ void testConverter(const std::vector<std::string>& names, const Converter::mode&
 		time.reserve(number_of_tests);
 
 		std::string new_name = name.substr(0, name.size() - 3) + "bard";
-
 		for (uint k = 0; k < number_of_tests; ++k)
 		{
 			start = std::chrono::system_clock::now();

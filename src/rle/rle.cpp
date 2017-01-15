@@ -5,6 +5,13 @@
 #include "RLE.hpp"
 
 
+bool RLE::compare(const Pixel& pixel1, const Pixel& pixel2) const
+{
+	if (pixel1[0] == pixel2[0] && pixel1[1] == pixel2[1] && pixel1[2] == pixel2[2])
+		return true;
+	return false;
+}
+
 void RLE::encode(const std::string& filename, const bool& grayscale)
 {
 	Pixel next;
@@ -17,17 +24,13 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 	file.open(filename, std::ios::in | std::ios::binary);
 	if (!file.is_open())
 	{
-		std::cout << "cannot open file to encode." << std::endl;
-		getchar();
-		exit(1);
+		Error("cannot open file to encode.");
 	}
 
-	compressed.open(decoded_filename(filename), std::ios::out | std::ios::trunc | std::ios::binary);
+	compressed.open(encoded_filename(filename), std::ios::out | std::ios::trunc | std::ios::binary);
 	if (!compressed.is_open())
 	{
-		std::cout << "cannot open file to save encoded file." << std::endl;
-		getchar();
-		exit(1);
+		Error("cannot open file to save encoded file.");
 	}
 
 	file.read(reinterpret_cast<char*>(&current), sizeof(Pixel)); // read first two pixeles
@@ -66,16 +69,13 @@ void RLE::decode(const std::string& filename)
 	file.open(filename, std::ios::in | std::ios::binary);
 	if (!file.is_open())
 	{
-		std::cout << "cannot open file to decode." << std::endl;
-		getchar();
-		exit(1);
+		Error("cannot open file to decode.");
 	}
+
 	ready.open(decoded_filename(filename).c_str(), std::ios::trunc | std::ios::out | std::ios::binary);
 	if (!ready.is_open())
 	{
-		std::cout << "cannot open file to save decoded file." << std::endl;
-		getchar();
-		exit(1);
+		Error("cannot open file to save decoded file.");
 	}
 
 	while (!file.eof())
