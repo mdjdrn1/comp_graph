@@ -9,12 +9,12 @@
  * \param y pos (indexing from 0)
  * \return 3-item array with RGB values
  */
-SDL_utils::PixArr SDL_utils::get_pixel(SDL_Surface* surface, const int& x, const int& y)
+SDL_utils::Pixel SDL_utils::get_pixel(SDL_Surface* surface, const int& x, const int& y)
 {
 	int bpp = surface->format->BytesPerPixel;
 	Uint8* pixelPtr = static_cast<Uint8 *>(surface->pixels) + y * surface->pitch + x * bpp; // addres to pixel to get
 	Uint32 pixel = *(reinterpret_cast<Uint32 *>(pixelPtr));
-	PixArr pixel_array; // pixel_array will contain RGB values
+	Pixel pixel_array; // pixel_array will contain RGB values
 	SDL_GetRGB(pixel, surface->format, &pixel_array[0], &pixel_array[1], &pixel_array[2]);
 
 	return std::move(pixel_array);
@@ -48,10 +48,11 @@ void SDL_utils::draw_pixel(SDL_Surface* surface, const int& x, const int& y, con
  */
 SDL_Surface* SDL_utils::new_bmp_surface(const std::string& filename)
 {
+	// TODO: return unique_ptr
 	SDL_Surface* surface = SDL_LoadBMP(filename.c_str());
 	if (!surface)
 		throw Error("In SDL_utils::new_bmp_surface(): Unable to load bitmap from file: " + filename + ".");
-	
+
 	return surface;
 }
 
@@ -71,10 +72,10 @@ SDL_Surface* SDL_utils::new_empty_surface(const int& width, const int& height)
 	Uint32 Amask = 0xff000000; // alpha mask for the pixels
 
 	SDL_Surface* surf = SDL_CreateRGBSurface(0, width, height, bit_depth, std::move(Rmask), std::move(Gmask), std::move(Bmask), std::move(Amask));
-	
+
 	if (!surf)
 		throw Error("In SDL_utils::new_empty_surface(): failed to create new surface.");
-	
+
 	return surf;
 }
 
@@ -92,7 +93,7 @@ void SDL_utils::delete_surface(SDL_Surface* surface)
 * \brief Alter pixel into grayscale
 * \param pixel array of 3 uint8_ts representing RGB pixel (in BGR order)
 */
-void SDL_utils::to_gray_pixel(PixArr& pixel) // pixel in BGR order
+void SDL_utils::to_gray_pixel(Pixel& pixel) // pixel in BGR order
 {
 	// using luma formula to calculate "relative luminescence"
 	uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);

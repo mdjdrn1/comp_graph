@@ -1,48 +1,104 @@
-﻿#include "coder.hpp"
+#include "coder.hpp"
 
-Coder::Coder(mode choice) : m_current_mode(choice)
-{
 
-}
-
-Coder::~Coder()
-{
-	
-}
-
-/**
-* \brief Change mode of converter
-* \param new_mode coding algorithm BITPACK, RLE or HUFFMAN
-*/
-void Coder::change_mode(const mode& new_mode)
-{
-	m_current_mode = new_mode;
-}
-
-/**
-* \brief Create bard header
+/*
+* \brief Header ctor(for encoding)
 * \param image image to create header from
 * \param compression_mode mode BITPACK, RLE or HUFFMAN
 * \param grayscale_choice int 1 for grayscale, otherwise 0
-* \return new header
 */
-void Coder::bardHeader::create_from_SDLSurface(SDL_Surface* image, mode compression_mode, int grayscale_choice)
+Coder::Header::Header(const int& h, const int& w, const mode& compression_mode, const bool& grayscale_choice)
+	: offset(sizeof(Header)),
+	  width(w),
+	  height(h),
+	  grayscale(grayscale_choice),
+	  compression(static_cast<ushort>(compression_mode))
 {
-	offset = sizeof(bardHeader);
-	width = image->w;
-	height = image->h;
-	grayscale = grayscale_choice;
-	compression = static_cast<ushort>(compression_mode);
 }
 
-/**
-* \brief Readheader from bard file
-* \param input input file stream
-* \return read header
+/*
+* \brief Header ctor (for encoding)
+* \param image image to create header from
+* \param compression_mode mode BITPACK, RLE or HUFFMAN
+* \param grayscale_choice int 1 for grayscale, otherwise 0
 */
-void Coder::bardHeader::create_from_encoded_file(std::fstream& input)
+Coder::Header::Header(SDL_Surface* image, const mode& compression_mode, const bool& grayscale_choice)
+	: offset(sizeof(Header)),
+	  width(image->w),
+	  height(image->h),
+	  grayscale(grayscale_choice),
+	  compression(static_cast<ushort>(compression_mode))
 {
-	// TODO: add checking if file is correct
+}
+
+/*
+* \brief Header ctor (for decoding)
+* \param input input file stream
+*/
+Coder::Header::Header(std::fstream& input)
+{
 	input.seekg(0, std::ios_base::beg); // set input file to begin
 	input.read(reinterpret_cast<char*>(this), sizeof(*this));
 }
+
+std::string Coder::encoded_filename(const std::string& input_filename) const
+{
+	return std::move(input_filename.substr(0, input_filename.size() - 3) + "bard"); // output encoded file name
+}
+
+std::string Coder::decoded_filename(const std::string& input_filename) const
+{
+	return std::move(input_filename.substr(0, input_filename.size() - 5) + "_decoded.bmp"); // output decoded file name
+}
+
+
+/**
+* \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
+* \param image pixels-input surface
+* \param pixels vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+* \param x width value for image
+* \param y heigth value for image
+*/
+void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y)
+{
+	uint8_t* pixelptr = pixels.data(); // first pixels obj pointer
+	// then calculate how many pixels (from DataVector pixels) are available to draw in surface
+	ull left_to_draw = static_cast<ull>((pixels.size() - pixels.size() % 3) / 3);
+	while (y < image.h && x < image.w && left_to_draw > 0)
+	{
+		SDL_utils::draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
+		pixelptr += 3;
+		++x;
+		--left_to_draw;
+		if (x == image.w) // go to next line of image
+		{
+			x = 0;
+			++y;
+		}
+	}
+	pixels.erase(pixels.begin(), pixels.end() - pixels.size() % 3); // remove drew pixels
+}
+
+/**
+* \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
+* \param pixel pixel that will be drawn
+* \param pixels vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+* \param x width value for image
+* \param y heigth value for image
+*/
+void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y)
+{
+	int left_to_draw = reps;
+	while (y >= 0 && x < image.w && left_to_draw > 0)
+	{
+		SDL_utils::draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixel[2], pixel[1], pixel[0]);
+		++x;
+		--left_to_draw;
+		if (x == image.w) // go to next line of image
+		{
+			x = 0;
+			--y;
+		}
+	}
+}
+

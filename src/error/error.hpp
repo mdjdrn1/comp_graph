@@ -14,7 +14,7 @@ private:
 public:
 	explicit Error(const char* message);
 	explicit Error(const std::string& message);
-	inline const char* what() const override;
+	inline const char* what() const noexcept override;
 	virtual ~Error() = default;
 };
 

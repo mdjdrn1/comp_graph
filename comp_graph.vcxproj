@@ -140,24 +140,22 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\coder\bitpack\b_decoder.cpp" />
-    <ClCompile Include="src\coder\bitpack\b_encoder.cpp" />
+    <ClCompile Include="src\bitpack\bitpack.cpp" />
     <ClCompile Include="src\coder\coder.cpp" />
-    <ClCompile Include="src\coder\decoder.cpp" />
-    <ClCompile Include="src\coder\encoder.cpp" />
-    <ClCompile Include="src\coder\huffman\h_decoder.cpp" />
-    <ClCompile Include="src\coder\huffman\h_encoder.cpp" />
-    <ClCompile Include="src\coder\rle\r_decoder.cpp" />
-    <ClCompile Include="src\coder\rle\r_encoder.cpp" />
+    <ClCompile Include="src\converter\converter.cpp" />
     <ClCompile Include="src\error\error.cpp" />
+    <ClCompile Include="src\huffman\huffman.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\rle\rle.cpp" />
     <ClCompile Include="src\sdl_utils\sdl_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bitpack\bitpack.hpp" />
     <ClInclude Include="src\coder\coder.hpp" />
-    <ClInclude Include="src\coder\decoder.hpp" />
-    <ClInclude Include="src\coder\encoder.hpp" />
+    <ClInclude Include="src\converter\converter.hpp" />
     <ClInclude Include="src\error\error.hpp" />
+    <ClInclude Include="src\huffman\huffman.hpp" />
+    <ClInclude Include="src\rle\rle.hpp" />
     <ClInclude Include="src\sdl_utils\sdl_utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

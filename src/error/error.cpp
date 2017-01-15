@@ -15,7 +15,7 @@ Error::Error(const std::string& message)
 		<< "\tWHAT\t" << m_msg << std::endl;
 }
 
-inline const char* Error::what() const
+const char* Error::what() const noexcept
 {
 	return m_msg.c_str();
 }
