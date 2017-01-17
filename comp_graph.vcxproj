@@ -147,7 +147,6 @@
     <ClCompile Include="src\huffman\huffman.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\rle\rle.cpp" />
-    <ClCompile Include="src\sdl_utils\sdl_utils.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\bitpack\bitpack.hpp" />
@@ -156,7 +155,6 @@
     <ClInclude Include="src\error\error.hpp" />
     <ClInclude Include="src\huffman\huffman.hpp" />
     <ClInclude Include="src\rle\rle.hpp" />
-    <ClInclude Include="src\sdl_utils\sdl_utils.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -3,8 +3,9 @@
 
 #include <string>
 #include <vector>
-#include "../sdl_utils/sdl_utils.hpp"
-#include "../error/error.hpp"
+#include <SDL.h>
+#include <memory>
+#include <array>
 
 class Coder
 {
@@ -14,8 +15,18 @@ public:
 	using ull = unsigned long long;
 
 	using DataVector = std::vector<uint8_t>; // bytes vector
-	using Pixel = SDL_utils::Pixel; // Pixel = std::array<uint8_t, 3>
-
+	using Pixel = std::array<uint8_t, 3>;
+protected:
+	Pixel get_pixel(SDL_Surface* surface, const int& x, const int& y);
+	void draw_pixel(SDL_Surface* surface, const int& x, const int& y, const uint8_t& R, const uint8_t& G, const uint8_t& B);
+	SDL_Surface* new_bmp_surface(const std::string& filename);
+	SDL_Surface* new_empty_surface(const int& width, const int& height);
+	struct Surface_deleter
+	{
+		void operator()(SDL_Surface* surface) const;
+	};
+	using SDL_Surface_ptr = std::unique_ptr<SDL_Surface, Surface_deleter>;
+public:
 	enum mode
 	{
 		BITPACK,

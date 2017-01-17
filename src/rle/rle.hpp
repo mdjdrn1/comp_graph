@@ -2,8 +2,6 @@
 #define RLE_HPP___
 
 #include "../coder/coder.hpp"
-#include <string>
-#include "../sdl_utils/sdl_utils.hpp"
 
 class RLE : public Coder
 {

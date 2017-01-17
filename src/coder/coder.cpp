@@ -1,4 +1,94 @@
 #include "coder.hpp"
+#include <SDL.h>
+#include <array>
+#include "../error/error.hpp"
+
+
+/**
+ * \brief custom deleter for SDL_Surface unique pointer
+ * \param surface SDL_Surface
+ */
+void Coder::Surface_deleter::operator()(SDL_Surface* surface) const
+{
+	SDL_FreeSurface(surface);
+}
+
+/**
+* \brief Get pixel RGB values from SDL_Surface
+* \param surface image
+* \param x pos (indexing from 0)
+* \param y pos (indexing from 0)
+* \return 3-item array with RGB values
+*/
+Coder::Pixel Coder::get_pixel(SDL_Surface* surface, const int& x, const int& y)
+{
+	int bpp = surface->format->BytesPerPixel;
+	Uint8* pixelPtr = static_cast<Uint8 *>(surface->pixels) + y * surface->pitch + x * bpp; // addres to pixel to get
+	Uint32 pixel = *(reinterpret_cast<Uint32 *>(pixelPtr));
+	Pixel pixel_array; // pixel_array will contain RGB values
+	SDL_GetRGB(pixel, surface->format, &pixel_array[0], &pixel_array[1], &pixel_array[2]);
+
+	return std::move(pixel_array);
+}
+
+/**
+* \brief Draw pixel into SDL_Surface
+* \param surface image
+* \param x pos (indexing from 0)
+* \param y pos (indexing from 0)
+* \param R R value
+* \param G G value
+* \param B B value
+*/
+void Coder::draw_pixel(SDL_Surface* surface, const int& x, const int& y, const uint8_t& R, const uint8_t& G, const uint8_t& B)
+{
+	Uint32 pixel = SDL_MapRGB(surface->format, R, G, B);
+
+	int bpp = surface->format->BytesPerPixel;
+	Uint8* p = static_cast<Uint8 *>(surface->pixels) + y * surface->pitch + x * bpp; // ptr to pixel we want to set
+
+	p[0] = pixel & 0xff;
+	p[1] = (pixel >> 8) & 0xff;
+	p[2] = (pixel >> 16) & 0xff;
+}
+
+/**
+* \brief Create new SDL_Surface from existing BMP file
+* \param filename BMP file name
+* \return new surface
+*/
+SDL_Surface* Coder::new_bmp_surface(const std::string& filename)
+{
+	// TODO: return unique_ptr
+	SDL_Surface* surface = SDL_LoadBMP(filename.c_str());
+	if (!surface)
+		throw Error("In Coder::new_bmp_surface(): Unable to load bitmap from file: " + filename + ".");
+
+	return surface;
+}
+
+/**
+* \brief Create new empty SDL_Surface
+* \param width width of new surface
+* \param height height of new surface
+* \return new surface
+*/
+SDL_Surface* Coder::new_empty_surface(const int& width, const int& height)
+{
+	int bit_depth = 24;
+
+	Uint32 Rmask = 0x00ff0000; // red mask for the pixels
+	Uint32 Gmask = 0x0000ff00; // green mask for the pixels
+	Uint32 Bmask = 0x000000ff; // blue mask for the pixels
+	Uint32 Amask = 0xff000000; // alpha mask for the pixels
+
+	SDL_Surface* surf = SDL_CreateRGBSurface(0, width, height, bit_depth, std::move(Rmask), std::move(Gmask), std::move(Bmask), std::move(Amask));
+
+	if (!surf)
+		throw Error("In Coder::new_empty_surface(): failed to create new surface.");
+
+	return surf;
+}
 
 
 /*
@@ -75,7 +165,7 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 	ull left_to_draw = static_cast<ull>((pixels.size() - pixels.size() % 3) / 3);
 	while (y < image.h && x < image.w && left_to_draw > 0)
 	{
-		SDL_utils::draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
+		draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
 		pixelptr += 3;
 		++x;
 		--left_to_draw;
@@ -91,7 +181,7 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 /**
 * \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
 * \param pixel pixel that will be drawn
-* \param pixels vector with uint8_ts that represent pixels' RGB channels (in BRG order)
+* \param pixel vector with uint8_ts that represent pixels' RGB channels (in BRG order)
 * \param x width value for image
 * \param y heigth value for image
 */
@@ -100,7 +190,7 @@ void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int&
 	int left_to_draw = reps;
 	while (y >= 0 && x < image.w && left_to_draw > 0)
 	{
-		SDL_utils::draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixel[2], pixel[1], pixel[0]);
+		draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixel[2], pixel[1], pixel[0]);
 		++x;
 		--left_to_draw;
 		if (x == image.w) // go to next line of image

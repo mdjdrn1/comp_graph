@@ -1,9 +1,8 @@
 #ifndef ERROR_H___
 #define ERROR_H___
 
-#include <exception>
-#include <string>
 #include <iostream>
+#include <string>
 #include <fstream>
 
 class Error : public std::exception

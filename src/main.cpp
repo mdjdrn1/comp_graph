@@ -13,7 +13,7 @@ void testConverter(const std::vector<std::string>& names, const Converter::mode&
 int main(int argc, char** argv)
 {
 	std::fstream logfile("log.txt", std::ios_base::out | std::ios_base::trunc);
-	std::cout.rdbuf(logfile.rdbuf()); // redirect stdout to log file
+//	std::cout.rdbuf(logfile.rdbuf()); // redirect stdout to log file
 
 	using StringVector = std::vector<std::string>;
 
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
 
 	try
 	{
-		testConverter(filenames, Converter::mode::RLE_EN, 1);
+		testConverter(filenames, Converter::mode::BITPACK, 1);
 	}
 	catch (const Error&)
 	{
@@ -67,7 +67,7 @@ void testConverter(const std::vector<std::string>& names, const Converter::mode&
 		for (uint k = 0; k < number_of_tests; ++k)
 		{
 			start = std::chrono::system_clock::now();
-			converter.encode(name, mode);
+			converter.encode(name, mode, false);
 			end = std::chrono::system_clock::now();
 			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
 		}

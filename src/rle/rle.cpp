@@ -3,6 +3,7 @@
 #include <iostream>
 #include <cstdint>
 #include "RLE.hpp"
+#include "../error/error.hpp"
 
 
 bool RLE::compare(const Pixel& pixel1, const Pixel& pixel2) const
@@ -26,13 +27,11 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 		throw Error("In RLE::encode(): couldn't open output convert file.");
 
 	// load surface to create bard_header
-	SDL_Surface* image = SDL_utils::new_bmp_surface(filename);
+	SDL_Surface_ptr image(new_bmp_surface(filename));
 
 	// create new header for coded file
-	Header bard_header(image, RLE_EN, grayscale);
-
-	SDL_utils::delete_surface(image);
-
+	Header bard_header(image.get(), RLE_EN, grayscale);
+	
 	outfile.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
 	outfile.seekg(bard_header.offset, std::ios_base::beg);
 
@@ -87,7 +86,7 @@ void RLE::decode(const std::string& filename)
 	Header bard_header(infile); // reading Header
 	infile.seekg(bard_header.offset, std::ios_base::beg); // set file to read after header
 
-	SDL_Surface* decoded_image = SDL_utils::new_empty_surface(bard_header.width, bard_header.height); // creates surface for drawuing pixels (size header.width x header.height)
+	SDL_Surface_ptr decoded_image(new_empty_surface(bard_header.width, bard_header.height)); // creates surface for drawuing pixels (size header.width x header.height)
 	int x = 0, y = decoded_image->h - 1; // init current pixel (in surface) position
 
 	unsigned int repetition = 1;
@@ -104,7 +103,5 @@ void RLE::decode(const std::string& filename)
 
 	infile.close();
 
-	SDL_SaveBMP(decoded_image, decoded_filename(filename).c_str()); // finally, save file to BMP extension
-
-	SDL_utils::delete_surface(decoded_image); // clean up surface
+	SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()); // finally, save file to BMP extension
 }
