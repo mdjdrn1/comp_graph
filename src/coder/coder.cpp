@@ -118,7 +118,7 @@ void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int&
 void Coder::to_7_bit(Pixel& pixel)
 {
 	for (auto& value : pixel)
-		value &= 0;
+		value &= 254;
 }
 
 /**

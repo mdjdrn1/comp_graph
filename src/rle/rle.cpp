@@ -38,12 +38,17 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 
 	infile.seekg(54, std::ios_base::beg); // set file to read after header
 
-	Pixel next;
-	Pixel current;
+	Pixel next {};
+	Pixel current {};
 	unsigned int repetition = 1;
 
 	infile.read(reinterpret_cast<char*>(&current), sizeof(Pixel)); // read first two pixeles
 	infile.read(reinterpret_cast<char*>(&next), sizeof(Pixel));
+
+	to_7_bit(current);
+	if (grayscale)
+		to_gray(current);
+
 	// TODO: Read pixels from SDL_Surface
 	while (!infile.eof())
 	{
@@ -51,15 +56,15 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 		{
 			outfile.write(reinterpret_cast<char*>(&repetition), sizeof(repetition));
 			outfile.write(reinterpret_cast<char*>(&current), sizeof(Pixel));
-			to_7_bit(current);
-			if (grayscale)
-				to_gray(current);
 
 			repetition = 0;
 		}
 		++repetition;
 		current = next;
 		infile.read(reinterpret_cast<char*>(&next), sizeof(Pixel)); // read next pixel
+		to_7_bit(next);
+		if (grayscale)
+			to_gray(next);
 
 		if (infile.eof()) // if end of file, write repetitions and pixel to file
 		{
