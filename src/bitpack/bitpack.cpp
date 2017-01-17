@@ -31,7 +31,7 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 		{
 			pixel = SDL_utils::get_pixel(image, x, y); // read RGB values
 			if (grayscale == 1)
-				SDL_utils::to_gray_pixel(pixel);
+				to_gray(pixel);
 
 			for (auto it = pixel.rbegin(); it != pixel.rend(); ++it)
 				raw_bytes.push_back(std::move(*it)); // append reversely read values

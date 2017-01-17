@@ -14,7 +14,6 @@ namespace SDL_utils
 	SDL_Surface* new_bmp_surface(const std::string& filename);
 	SDL_Surface* new_empty_surface(const int& width, const int& height);
 	void delete_surface(SDL_Surface* surface);
-	void to_gray_pixel(Pixel& pixel);
 }
 
 #endif

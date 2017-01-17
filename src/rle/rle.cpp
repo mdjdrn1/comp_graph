@@ -44,13 +44,17 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 
 	infile.read(reinterpret_cast<char*>(&current), sizeof(Pixel)); // read first two pixeles
 	infile.read(reinterpret_cast<char*>(&next), sizeof(Pixel));
-
+	// TODO: Read pixels from SDL_Surface
 	while (!infile.eof())
 	{
 		if (!compare(current, next)) // if different, write repetitions and pixel to file
 		{
 			outfile.write(reinterpret_cast<char*>(&repetition), sizeof(repetition));
 			outfile.write(reinterpret_cast<char*>(&current), sizeof(Pixel));
+			to_7_bit(current);
+			if (grayscale)
+				to_gray(current);
+
 			repetition = 0;
 		}
 		++repetition;

@@ -41,16 +41,25 @@ Coder::Header::Header(std::fstream& input)
 	input.read(reinterpret_cast<char*>(this), sizeof(*this));
 }
 
+/**
+ * \brief Generates name of file after encoding
+ * \param input_filename input file name
+ * \return encoded file name
+ */
 std::string Coder::encoded_filename(const std::string& input_filename) const
 {
 	return std::move(input_filename.substr(0, input_filename.size() - 3) + "bard"); // output encoded file name
 }
 
+/**
+* \brief Generates name of file after decoding
+* \param input_filename input file name
+* \return decoded file name
+*/
 std::string Coder::decoded_filename(const std::string& input_filename) const
 {
 	return std::move(input_filename.substr(0, input_filename.size() - 5) + "_decoded.bmp"); // output decoded file name
 }
-
 
 /**
 * \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
@@ -102,3 +111,23 @@ void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int&
 	}
 }
 
+/**
+ * \brief alters 8-bit pixel values into 7-bit values
+ * \param pixel input pixel
+ */
+void Coder::to_7_bit(Pixel& pixel)
+{
+	for (auto& value : pixel)
+		value &= 0;
+}
+
+/**
+* \brief Alter pixel into grayscale
+* \param pixel array of 3 uint8_ts representing RGB pixel (in BGR order)
+*/
+void Coder::to_gray(Pixel& pixel) // pixel in BGR order
+{
+	// using luma formula to calculate "relative luminescence"
+	uint8_t luma = static_cast<uint8_t>(pixel[2] * 0.2126 + pixel[1] * 0.7152 + pixel[0] * 0.0722);
+	pixel[0] = pixel[1] = pixel[2] = luma;
+}
