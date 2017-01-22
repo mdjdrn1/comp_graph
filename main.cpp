@@ -11,7 +11,7 @@ int main(int argc, char ** argv)
 	std::cout << "////////////////////////////////// " << std::endl;
 	std::cout << "//////// KODOWANIE HUFFMANA ////// " << std::endl;
 	std::cout << "////////////////////////////////// " << std::endl;
-	std::string file_to_decode = "8.bmp"; // zle nazwy xd
+	std::string file_to_decode = "4.bmp"; // zle nazwy xd
 	std::string file_to_encode = "encode_" + file_to_decode;
 
 	using usVect = std::vector<std::chrono::microseconds::rep>;

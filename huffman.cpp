@@ -40,7 +40,7 @@ Huffman::node::node(uint8_t color, uint frequency)
 Huffman::Huffman(std::string in_file_name, std::string out_file_name)
 	: compare([](const shared_ptr_huff &l, const shared_ptr_huff &r)
 	{return (l->frequency > r->frequency); }), huffmanQueue(compare),
-	size_map_code(0), min_map_code(0)
+	size_map_code(0), size_codeRepresentation(0)
 {
 	// Check input file extesion
 	// If you want compress bmp file
@@ -96,17 +96,33 @@ void Huffman::encode(std::string in_file_name, std::string out_file_name)
 	huffman_header.height = pics->h;
 	huffman_header.width = pics->w;
 	huffman_header.greyType = false;
-	huffman_header.headerType = false;
 	huffman_header.countColor = countsColor;
 	huffman_header.size_map_code = size_map_code / 7 + 1; // as byte
-	huffman_header.min_map_code = min_map_code;
-	//////////////////////////////
-	out_file.write(reinterpret_cast<char*>(&huffman_header), sizeof(Header));
 	
+	//////////////////////////////
+	// Set header type
+	//////////////////////////////
+	if (size_codeRepresentation < 120 && size_map_code < 8)
+		huffman_header.headerType = true;
+	else
+		huffman_header.headerType = false;
+	
+	out_file.write(reinterpret_cast<char*>(&huffman_header), sizeof(Header));
+
 	// Save if exist color channels
 	if (huffman_header.headerType)
 	{
-		// later
+		out_file.write(reinterpret_cast<char*>(&size_codeRepresentation), sizeof(uint8));
+		for (ushort it = 0; it < 256; ++it)
+			if (codeRepresentation[it].size())
+			{
+				uint8 color = 0;
+				for (int position = 0, i = codeRepresentation[it].size() - 1; i >= 0; --i, ++position)
+					color |= (codeRepresentation[it][i] << position);
+				out_file.write(reinterpret_cast<char*>(&color), sizeof(uint8));
+				out_file.write(reinterpret_cast<char*>(&it), sizeof(uint8));
+				std::cout << (unsigned)color << " " << (unsigned)it << std::endl;
+			}
 	}
 	// Save all color channels
 	else
@@ -118,7 +134,7 @@ void Huffman::encode(std::string in_file_name, std::string out_file_name)
 			{
 				for (int position = 0, i = codeRepresentation[it].size() - 1; i >= 0; --i, ++position)
 					color |= (codeRepresentation[it][i] << position);
-				//std::cout << it << ". " <<  decToBin(color) << std::endl;
+
 				out_file.write(reinterpret_cast<char*>(&color), sizeof(uint8) * huffman_header.size_map_code);
 			}
 			else
@@ -174,12 +190,22 @@ void Huffman::decode(std::string in_file_name, std::string out_file_name)
 	in_file.read(reinterpret_cast<char*>(&huff_header), sizeof(Header));
 
 	// Map hold huffman code each color channels
-	std::map <uint32_t, uchar> mapCode;
+	std::map <uint32_t, uint8> mapCode;
 
 	// Read if exist color channels
 	if (huff_header.headerType)
 	{
-		// later
+		ushort it;
+		in_file.read(reinterpret_cast<char*>(&it), sizeof(uint8));
+		while (it--)
+		{
+			uint8 position, color;
+			in_file.read(reinterpret_cast<char*>(&color), sizeof(uint8));
+			in_file.read(reinterpret_cast<char*>(&position), sizeof(uint8));
+			std::cout << (unsigned)color << " " << (unsigned)position << std::endl;
+			mapCode.insert({ color, position });
+		}
+			
 	}
 	// Read all color channels
 	else
@@ -195,21 +221,13 @@ void Huffman::decode(std::string in_file_name, std::string out_file_name)
 			}
 
 		}
-
-		//for (auto it = mapCode.begin(); it != mapCode.end(); ++it)
-		//	std::cout << (unsigned) it->second << " " <<  decToBin(it->first) << std::endl;
 	}
 	/////////////////////////////////////////////////////////////////////////
 	// Read encoded data from .bard file
 	/////////////////////////////////////////////////////////////////////////
 	SDL_Surface* decoded_image = SDL_utils::new_empty_surface(huff_header.width, huff_header.height);
-	//std::string temp_color;
-	//int index = 0;
-	//uint8_t RGB[3];
 	ullong countColor = huff_header.countColor * 3;
 	int x = 0, y = 0;
-
-	//in_file.read(reinterpret_cast<char*>(&buffer[0]), countColor);
 
 	short position = 0;
 	short index = 7;
@@ -292,24 +310,14 @@ void Huffman::returnCode(const shared_ptr_huff & root)
 	}
 	else
 	{
+		++size_codeRepresentation;
 		codeRepresentation[root->color] = code;
 		// add first and last control bit
 		codeRepresentation[root->color].insert(codeRepresentation[root->color].begin(), true);
-		//codeRepresentation[root->color].push_back(true);
-		//std::cout << (unsigned) root->color << " KOD: " << decToBin(root->color) << std::endl;
-		//std::cout << (unsigned)root->color << " KOD: ";
 
-		//for (int j = 0; j < codeRepresentation[root->color].size(); ++j)
-		//	std::cout << codeRepresentation[root->color][j];
-		//std::cout << std::endl;
-		
 		if (code.size() > size_map_code) // check max map size
-		{
 			size_map_code = code.size();
-			
-		}
-		else if ((code.size() < min_map_code))
-			min_map_code = code.size();
+
 			
 	}
 }
