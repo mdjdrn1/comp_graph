@@ -33,7 +33,7 @@ protected:
 	using ushort = unsigned short;
 	using ulong = unsigned long;
 	using ullong = unsigned long long;
-	using byte = unsigned char;
+	using uchar = unsigned char;
 	using uint8 = uint8_t;
 
 	std::vector <bool> code; 			// hold huffman code
@@ -41,6 +41,7 @@ protected:
 	using shared_ptr_huff = std::shared_ptr<node>;
 	
 	ushort size_map_code; 
+	ushort min_map_code;
 
 	// Priority_queue with huffman tree
 	std::function<bool(const shared_ptr_huff &, const shared_ptr_huff &)> compare;
