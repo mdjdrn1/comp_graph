@@ -169,15 +169,25 @@ std::string Coder::decoded_filename(const std::string& input_filename) const
 * \param x width value for image
 * \param y heigth value for image
 */
-void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y)
+void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y, const bool& grayscale) const
 {
 	uint8_t* pixelptr = pixels.data(); // first pixels obj pointer
 	// then calculate how many pixels (from DataVector pixels) are available to draw in surface
-	ull left_to_draw = static_cast<ull>((pixels.size() - pixels.size() % 3) / 3);
+	ull left_to_draw = static_cast<ull>((pixels.size() - pixels.size() % 3));// / 3);
+	if (!grayscale)
+		left_to_draw /= 3;
 	while (y < image.h && x < image.w && left_to_draw > 0)
 	{
-		draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
-		pixelptr += 3;
+		if (!grayscale)
+		{
+			draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixelptr[2], pixelptr[1], pixelptr[0]);
+			pixelptr += 3;
+		}
+		else
+		{
+			draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixelptr[0], pixelptr[0], pixelptr[0]);
+			++pixelptr;
+		}
 		++x;
 		--left_to_draw;
 		if (x == image.w) // go to next line of image
@@ -189,6 +199,7 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 	pixels.erase(pixels.begin(), pixels.end() - pixels.size() % 3); // remove drew pixels
 }
 
+// TODO: temporary, just for RLE
 /**
 * \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
 * \param pixel pixel that will be drawn

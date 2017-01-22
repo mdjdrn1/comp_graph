@@ -38,10 +38,13 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 		{
 			pixel = get_pixel(image.get(), x, y); // read RGB values
 			if (grayscale)
+			{
 				to_gray(pixel);
-
-			for (auto it = pixel.rbegin(); it != pixel.rend(); ++it)
-				raw_bytes.push_back(std::move(*it)); // append reversely read values
+				raw_bytes.push_back(std::move(pixel[0]));	// add only one channel (as others are the same)
+			}
+			else
+				for (auto it = pixel.rbegin(); it != pixel.rend(); ++it)
+					raw_bytes.push_back(std::move(*it)); // append reversely read values
 
 			if (raw_bytes.size() >= 8)
 			{
@@ -146,7 +149,7 @@ void Bitpack::decode(const std::string& filename, const bool& grayscale)
 			temp_bytes.clear(); // clean up temps
 
 			if (decoded_bytes.size() > 3)
-				draw_pixels(*decoded_image, decoded_bytes, x, y);
+				draw_pixels(*decoded_image, decoded_bytes, x, y, grayscale);
 		}
 	}
 
@@ -159,7 +162,7 @@ void Bitpack::decode(const std::string& filename, const bool& grayscale)
 
 		std::move(temp_bytes.begin(), temp_bytes.end(), std::back_inserter(decoded_bytes)); // move v_temp values to the end of vector decode_vals
 		temp_bytes.clear(); // clean up
-		draw_pixels(*decoded_image, decoded_bytes, x, y);
+		draw_pixels(*decoded_image, decoded_bytes, x, y, grayscale);
 	}
 
 	infile.close(); // finished reading. clean up

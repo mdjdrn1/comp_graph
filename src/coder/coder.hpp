@@ -42,7 +42,7 @@ protected:
 	// manipulate SDL_Surface
 	Pixel get_pixel(SDL_Surface* surface, const int& x, const int& y);
 	void draw_pixel(SDL_Surface* surface, const int& x, const int& y, const uint8_t& R, const uint8_t& G, const uint8_t& B) const;
-	void draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y); // auxiliary method
+	void draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y, const bool& grayscale = false) const; // auxiliary method
 	void draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y) const; // auxiliary method
 
 	// manipulate Pixel
