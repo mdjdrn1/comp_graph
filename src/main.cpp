@@ -1,30 +1,24 @@
-#include <SDL.h>
 #include <iostream>
 #include <iomanip>
-#include <chrono>
-#include <thread>
-#include <vector>
-#include <numeric>
 #include <string>
 #include "converter/converter.hpp"
+#include "error/error.hpp"
 
+using ConverterTuple = std::tuple<bool, std::string, Converter::mode, bool>;
+
+ConverterTuple get_data();
 void testConverter(const std::vector<std::string>& names, const Converter::mode& mode, unsigned number_of_tests);
 
 int main(int argc, char** argv)
 {
-	std::fstream logfile("log.txt", std::ios_base::out | std::ios_base::trunc);
-//	std::cout.rdbuf(logfile.rdbuf()); // redirect stdout to log file
-
-	using StringVector = std::vector<std::string>;
-
-	StringVector filenames = {"test\\pics\\1.bmp", "test\\pics\\2.bmp",
-		"test\\pics\\3.bmp", "test\\pics\\4.bmp",
-		"test\\pics\\5.bmp", "test\\pics\\6.bmp",
-		"test\\pics\\7.bmp"};
-
 	try
 	{
-		testConverter(filenames, Converter::mode::BITPACK, 1);
+		ConverterTuple convert_data = get_data();
+		Converter converter;
+		if (std::get<0>(convert_data))
+			converter.encode(std::get<1>(convert_data), std::get<2>(convert_data), std::get<3>(convert_data));
+		else
+			converter.decode(std::get<1>(convert_data));
 	}
 	catch (const Error&)
 	{
@@ -38,65 +32,77 @@ int main(int argc, char** argv)
 		exit(EXIT_FAILURE);
 	}
 
-	std::cout.rdbuf(nullptr);
+	std::cout << "Finished!" << std::endl;
+
 	return 0;
 }
 
 /**
- * \brief Conversion/deconversion test for bitpack.
- * \param names container with file names
- * \param number_of_tests number of tests that will be executed for each file
+ * \brief Get compression data from user
+ * \return ConverterTuple Tuple with necessary data for conversion
+ * \ConverterTuple bool coding mode: 0=encode, 1=decode
+ * \ConverterTuple std::string filename
+ * \ConverterTuple Converter::mode coding algorithm
+ * \ConverterTuple bool grayscale
  */
-void testConverter(const std::vector<std::string>& names, const Converter::mode& mode, unsigned number_of_tests)
+ConverterTuple get_data()
 {
-	using uint = unsigned int;
-	using ull = unsigned long long;
-	std::cout << std::setw(10) << "Cases: " << number_of_tests << std::endl << std::endl;
-	Converter converter;
-	std::chrono::system_clock::time_point start, end;
-	using usVect = std::vector<std::chrono::microseconds::rep>;
-	usVect time;
-	std::chrono::microseconds::rep av;
-	usVect::iterator best, worst;
+	std::string filename;
+	std::cout << "SELECT FILE" << std::endl;
+	std::cout << ">> ";
+	std::cin.clear();
+	if (!std::getline(std::cin, filename))
+		throw Error("Input error.");
 
-	for (const auto& name : names)
+	int coding;
+	bool encoding;
+	std::cout << "SELECT OPERATION" << std::endl;
+	std::cout << "1: " << std::setw(10) << "Encoding" << std::endl;
+	std::cout << "2: " << std::setw(10) << "Decoding" << std::endl;
+	std::cout << ">> ";
+	std::cin.clear();
+	if (!(std::cin >> coding))
+		throw Error("Input error.");
+
+	if (!(coding == 1 || coding == 2))
+		throw Error("Invalid operation choice.");
+
+	encoding = coding == 1 ? true : false;
+
+	Converter::mode algorithm_mode;
+	bool grayscale_mode;
+	// choice of algorithm mode and grayscale only if encoding, decoding automatically detects grayscale
+	if (encoding)
 	{
-		time.clear();
-		time.reserve(number_of_tests);
+		int algorithm;
+		std::cout << "SELECT ALGORITHM" << std::endl;
+		std::cout << "1: " << std::setw(10) << "Bitpack" << std::endl;
+		std::cout << "2: " << std::setw(10) << "Huffman" << std::endl;
+		std::cout << "3: " << std::setw(10) << "RLE" << std::endl;
+		std::cout << ">> ";
+		std::cin.clear();
+		if (!(std::cin >> algorithm))
+			throw Error("Input error.");
 
-		for (uint k = 0; k < number_of_tests; ++k)
-		{
-			start = std::chrono::system_clock::now();
-			converter.encode(name, mode, false);
-			end = std::chrono::system_clock::now();
-			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
-		}
-		av = std::accumulate(time.begin(), time.end(), 0) / time.size();
-		best = std::min_element(time.begin(), time.end());
-		worst = std::max_element(time.begin(), time.end());
-		std::cout << std::setw(10) << "File: " << name << std::endl;
-		std::cout << std::setw(10) << "ENCODING" << std::endl;
-		std::cout << std::setw(10) << "Worst\t" << *worst / 1000000. << "s\n";
-		std::cout << std::setw(10) << "Average\t" << av / 1000000. << "s\n";
-		std::cout << std::setw(10) << "Best\t" << *best / 1000000. << "s\n";
+		if (algorithm < 1 || algorithm > 3 || !(static_cast<Converter::mode>(algorithm) == algorithm))
+			throw Error("Invalid algorithm.");
 
-		time.clear();
-		time.reserve(number_of_tests);
+		algorithm_mode = static_cast<Converter::mode>(algorithm - 1);
 
-		std::string new_name = name.substr(0, name.size() - 3) + "bard";
-		for (uint k = 0; k < number_of_tests; ++k)
-		{
-			start = std::chrono::system_clock::now();
-			converter.decode(new_name, mode);
-			end = std::chrono::system_clock::now();
-			time.push_back(std::chrono::duration_cast<std::chrono::microseconds>(end - start).count());
-		}
-		av = std::accumulate(time.begin(), time.end(), 0) / time.size();
-		best = std::min_element(time.begin(), time.end());
-		worst = std::max_element(time.begin(), time.end());
-		std::cout << std::setw(10) << "DECODING" << std::endl;
-		std::cout << std::setw(10) << "Worst\t" << *worst / 1000000. << "s\n";
-		std::cout << std::setw(10) << "Average\t" << av / 1000000. << "s\n";
-		std::cout << std::setw(10) << "Best\t" << *best / 1000000. << "s\n";
+		int grayscale;
+		std::cout << "GRAYSCALE CONVERSION?" << std::endl;
+		std::cout << "1: " << std::setw(10) << "Yes" << std::endl;
+		std::cout << "2: " << std::setw(10) << "No" << std::endl;
+		std::cout << ">> ";
+		std::cin.clear();
+		if (!(std::cin >> grayscale))
+			throw Error("Input error.");
+
+		if (!(grayscale == 1 || grayscale == 2))
+			throw Error("Invalid grayscale choice.");
+
+		grayscale_mode = (grayscale == 1);
 	}
+
+	return std::make_tuple(encoding, std::move(filename), algorithm_mode, grayscale_mode);
 }

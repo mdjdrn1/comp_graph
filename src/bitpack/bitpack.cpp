@@ -3,6 +3,11 @@
 #include <iterator>
 #include "../error/error.hpp"
 
+/**
+ * \brief Encoding method for 8-to-7 bits mode
+ * \param filename input BMP file path
+ * \param grayscale true if encoding in grayscale
+ */
 void Bitpack::encode(const std::string& filename, const bool& grayscale)
 {
 	// load surface
@@ -62,7 +67,13 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 	outfile.close();
 }
 
-Bitpack::DataVector Bitpack::packer(DataVector& raw_bytes) const
+/**
+* \brief Convert pack of 8 bytes into 7 bytes
+* \param raw_bytes vector with uint8_ts.
+* It must contain at least 8 values (bytes), 8 of them will be manipluated.
+* \return 7 converted values
+*/
+auto Bitpack::packer(DataVector& raw_bytes) const -> DataVector
 {
 	if (raw_bytes.size() < 8)
 		throw Error("In Bitpack::packer(): invalid raw_bytes size. It must equals (at least) 8.");
@@ -97,10 +108,11 @@ Bitpack::DataVector Bitpack::packer(DataVector& raw_bytes) const
 }
 
 /**
-* \brief Deconverting method for 8-to-7 bits mode
-* \param filename converted file path
+* \brief Decoding method for 8-to-7 bits mode
+* \param filename input bard file path
+* \param grayscale true if encoding in grayscale
 */
-void Bitpack::decode(const std::string& filename)
+void Bitpack::decode(const std::string& filename, const bool& grayscale)
 {
 	// reading values from file
 	std::fstream infile(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
@@ -161,7 +173,7 @@ void Bitpack::decode(const std::string& filename)
 * It must contain at least 7 values (bytes), 7 of them will be manipluated
 * \return 8 deconverted values
 */
-Bitpack::DataVector Bitpack::unpacker(DataVector& encoded_bytes) const
+auto Bitpack::unpacker(DataVector& encoded_bytes) const -> DataVector
 {
 	if (encoded_bytes.size() < 7)
 		throw Error("In Bitpack::unpacker(): invalid encoded_bytes size. It must equals (at least) 8.");

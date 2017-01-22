@@ -55,7 +55,7 @@ public:
 	~Huffman() = default;
 
 	void encode(const std::string& filename, const bool& grayscale) override;
-	void decode(const std::string& filename) override;
+	void decode(const std::string& filename, const bool& grayscale) override;
 };
 
 #endif HUFFMAN_H

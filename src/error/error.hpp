@@ -1,7 +1,6 @@
 #ifndef ERROR_H___
 #define ERROR_H___
 
-#include <iostream>
 #include <string>
 #include <fstream>
 

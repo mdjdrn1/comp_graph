@@ -76,7 +76,7 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 	outfile.close();
 }
 
-void RLE::decode(const std::string& filename)
+void RLE::decode(const std::string& filename, const bool& grayscale)
 {
 	// reading values from file
 	std::fstream infile(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded

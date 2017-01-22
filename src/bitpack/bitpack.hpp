@@ -26,7 +26,7 @@ public:
 private:
 	DataVector packer(DataVector& raw_bytes) const; // auxiliary method for encode
 public:
-	void decode(const std::string& filename) override;
+	void decode(const std::string& filename, const bool& grayscale) override;
 private:
 	DataVector unpacker(DataVector& encoded_bytes) const; // auxiliary method for decode
 };

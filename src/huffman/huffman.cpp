@@ -78,7 +78,7 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 	saveEncode(filename, encoded_filename(filename));
 }
 
-void Huffman::decode(const std::string& filename)
+void Huffman::decode(const std::string& filename, const bool& grayscale)
 {
 	std::ifstream in_file(filename, std::ios::binary);
 	std::map<std::string, uint8_t> mapCode;
