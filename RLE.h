@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -17,7 +18,10 @@ private:
 	};
 	PIXEL next;
 	PIXEL current;
-	unsigned int repetition = 1;
+	uint8_t repetition = 1;
+	vector<PIXEL>vcopy;
+	uint8_t vstart = 0;
+	uint8_t vsize = vcopy.size();
 
 public:
 	RLE();
