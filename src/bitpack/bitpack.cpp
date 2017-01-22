@@ -1,10 +1,12 @@
 #include <string>
 #include "bitpack.hpp"
+#include <iterator>
+#include "../error/error.hpp"
 
 void Bitpack::encode(const std::string& filename, const bool& grayscale)
 {
 	// load surface
-	SDL_Surface* image = SDL_utils::new_bmp_surface(filename);
+	SDL_Surface_ptr image(new_bmp_surface(filename));
 
 	// assuming filename is in correct format e.g. "path\\foo bar xyz.bmp"
 	std::fstream outfile(encoded_filename(filename).c_str(),
@@ -14,7 +16,7 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 		throw Error("In Bitpack::encode(): couldn't open output convert file.");
 
 	// create new header for coded file
-	Header bard_header(image, BITPACK, grayscale);
+	Header bard_header(image.get(), BITPACK, grayscale);
 
 	outfile.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
 	outfile.seekg(bard_header.offset, std::ios_base::beg);
@@ -29,7 +31,7 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 	{
 		for (int x = 0; x < image->w; ++x)
 		{
-			pixel = SDL_utils::get_pixel(image, x, y); // read RGB values
+			pixel = get_pixel(image.get(), x, y); // read RGB values
 			if (grayscale)
 				to_gray(pixel);
 
@@ -57,7 +59,6 @@ void Bitpack::encode(const std::string& filename, const bool& grayscale)
 		encoded_bytes.clear(); // clean up already saved values
 	}
 
-	SDL_utils::delete_surface(image);
 	outfile.close();
 }
 
@@ -109,7 +110,7 @@ void Bitpack::decode(const std::string& filename)
 	Header bard_header(infile); // reading Header
 	infile.seekg(bard_header.offset, std::ios_base::beg); // set file to read after header
 
-	SDL_Surface* decoded_image = SDL_utils::new_empty_surface(bard_header.width, bard_header.height); // creates surface for drawuing pixels (size header.width x header.height)
+	SDL_Surface_ptr decoded_image(new_empty_surface(bard_header.width, bard_header.height)); // creates surface for drawuing pixels (size header.width x header.height)
 	int x = 0, y = 0; // init current pixel (in surface) position
 
 	DataVector raw_bytes; // before-conversion vector. It will contain all "7-bit" values read from file and BEFORE being decoded into 8-bit values (in order BGR)
@@ -151,9 +152,7 @@ void Bitpack::decode(const std::string& filename)
 
 	infile.close(); // finished reading. clean up
 
-	SDL_SaveBMP(decoded_image, decoded_filename(filename).c_str()); // finally, save file to BMP extension
-
-	SDL_utils::delete_surface(decoded_image); // clean up surface
+	SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()); // finally, save file to BMP extension
 }
 
 /**

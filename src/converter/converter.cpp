@@ -2,7 +2,7 @@
 
 void Converter::encode(const std::string& filename, const mode& algoritm_mode, const bool& grayscale) const
 {
-	std::unique_ptr<Coder> encoder = nullptr;
+	std::unique_ptr<Coder> encoder;
 	switch (algoritm_mode)
 	{
 	case mode::BITPACK:
@@ -22,7 +22,7 @@ void Converter::encode(const std::string& filename, const mode& algoritm_mode, c
 
 void Converter::decode(const std::string& filename, const mode& algoritm_mode) const
 {
-	std::unique_ptr<Coder> decoder = nullptr;
+	std::unique_ptr<Coder> decoder;
 	// TODO: find mode in header > run proper algorithm
 	switch (algoritm_mode)
 	{

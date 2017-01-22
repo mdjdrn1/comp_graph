@@ -1,9 +1,7 @@
 #ifndef BITPACK_HPP___
 #define BITPACK_HPP___
 
-#include "../sdl_utils/sdl_utils.hpp"
 #include "../coder/coder.hpp"
-#include "../error/error.hpp"
 #include <vector>
 
 class Bitpack : public Coder
@@ -14,7 +12,7 @@ public:
 	using ull = unsigned long long;
 
 	using DataVector = std::vector<uint8_t>; // bytes vector
-	using Pixel = SDL_utils::Pixel; // Pixel = std::array<uint8_t, 3>
+	using Pixel = Coder::Pixel;
 
 	Bitpack() = default;
 	~Bitpack() = default;
