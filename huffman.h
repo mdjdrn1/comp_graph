@@ -51,8 +51,8 @@ protected:
 	////////////////////////////////////
 	// Methods huffman
 	////////////////////////////////////
-	void encode(std::string in_file_name, std::string out_file_name);
-	void decode(std::string in_file_name, std::string out_file_name);
+	void encode(std::string in_file_name, std::string out_file_name, const bool& grayscale);
+	void decode(std::string in_file_name, std::string out_file_name, const bool& grayscale);
 
 	// Encode methods
 	void makeTree(unsigned int *);					// create huffman tree

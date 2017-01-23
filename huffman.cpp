@@ -42,15 +42,20 @@ Huffman::Huffman(std::string in_file_name, std::string out_file_name)
 	{return (l->frequency > r->frequency); }), huffmanQueue(compare),
 	size_map_code(0), size_codeRepresentation(0)
 {
+	
+
+	const bool SKALA_SZAROSCI = false;
+
+
 	// Check input file extesion
 	// If you want compress bmp file
 	if ((in_file_name.substr(in_file_name.find_last_of(".") + 1) == "bmp") && 
 		(out_file_name.substr(out_file_name.find_last_of(".") + 1) == "bard"))
-			encode(in_file_name, out_file_name);
+			encode(in_file_name, out_file_name, SKALA_SZAROSCI);
 	// If you want decompress bard file
 	else if ((in_file_name.substr(in_file_name.find_last_of(".") + 1) == "bard") &&
 			(out_file_name.substr(out_file_name.find_last_of(".") + 1) == "bmp"))
-				decode(in_file_name, out_file_name);
+				decode(in_file_name, out_file_name, SKALA_SZAROSCI);
 	// Extesion not found
 	else
 	{
@@ -58,7 +63,7 @@ Huffman::Huffman(std::string in_file_name, std::string out_file_name)
 	}
 }
 
-void Huffman::encode(std::string in_file_name, std::string out_file_name)
+void Huffman::encode(std::string in_file_name, std::string out_file_name, const bool& grayscale)
 {
 	std::cout << "////////////////////////////////// " << std::endl;
 	std::cout << "//////      KOMPRESJA      /////// " << std::endl;
@@ -68,18 +73,29 @@ void Huffman::encode(std::string in_file_name, std::string out_file_name)
 	uint frequencyColor[256];
 	memset(frequencyColor, 0, sizeof(uint) * 256);
 
-	// Read bmp file 
+	// Read bmp file and count frequency of Color
 	uint countsColor = 0;
 	SDL_Surface *pics = SDL_utils::new_bmp_surface(in_file_name);
 	for (int y = 0; y < pics->h; ++y)
 		for (int x = 0; x < pics->w; ++x)
 		{
 			arr = SDL_utils::get_pixel(pics, x, y);
-			++frequencyColor[arr[0]];
-			++frequencyColor[arr[1]];
-			++frequencyColor[arr[2]];
-			countsColor++;;
+			if (grayscale)
+			{
+				SDL_utils::to_gray_pixel(arr);
+				++frequencyColor[arr[0]];
+			}
+			else
+			{
+				++frequencyColor[arr[0]];
+				++frequencyColor[arr[1]];
+				++frequencyColor[arr[2]];
+				countsColor++;
+			}
+				
+			
 		}
+
 	// CREATE HUFFMAN CODE
 	makeTree(frequencyColor);
 	///////////////////////////////////////////////////////////////////////////
@@ -95,12 +111,13 @@ void Huffman::encode(std::string in_file_name, std::string out_file_name)
 	Header huffman_header;
 	huffman_header.height = pics->h;
 	huffman_header.width = pics->w;
-	huffman_header.greyType = false;
+	huffman_header.greyType = grayscale;
 	huffman_header.countColor = countsColor;
 	huffman_header.size_map_code = size_map_code / 7 + 1; // as byte
 	
 	//////////////////////////////
 	// Set header type
+	// Limit the size of header to a minimum 
 	//////////////////////////////
 	if (size_codeRepresentation < 120 && size_map_code < 8)
 		huffman_header.headerType = true;
@@ -150,15 +167,16 @@ void Huffman::encode(std::string in_file_name, std::string out_file_name)
 	bool bit;
 	uchar byte = 0;
 	short position = 7;
-	for (int y = 0; y < pics->h; ++y) // ITS A PRANK BRO
+	for (int y = 0; y < pics->h; ++y) 
 		for (int x = 0; x < pics->w; ++x)
 		{
-			arr = SDL_utils::get_pixel(pics, x, y);
-			for (int index = 0; index < 3; ++index)
+			if (grayscale)
 			{
-				for (int i = 1; i < codeRepresentation[arr[index]].size(); ++i)
+				arr = SDL_utils::get_pixel(pics, x, y);
+				SDL_utils::to_gray_pixel(arr);
+				for (int i = 1; i < codeRepresentation[arr[0]].size(); ++i)
 				{
-					byte |= (codeRepresentation[arr[index]][i] << position);
+					byte |= (codeRepresentation[arr[0]][i] << position);
 					if (--position == -1)
 					{
 						out_file.write(reinterpret_cast<char*>(&byte), sizeof(byte));
@@ -167,12 +185,29 @@ void Huffman::encode(std::string in_file_name, std::string out_file_name)
 					}
 				}
 			}
+			else
+			{
+				arr = SDL_utils::get_pixel(pics, x, y);
+				for (int index = 0; index < 3; ++index)
+				{
+					for (int i = 1; i < codeRepresentation[arr[index]].size(); ++i)
+					{
+						byte |= (codeRepresentation[arr[index]][i] << position);
+						if (--position == -1)
+						{
+							out_file.write(reinterpret_cast<char*>(&byte), sizeof(byte));
+							position = 7;
+							byte = 0;
+						}
+					}
+				}
+			}
 		}
 	out_file.write(reinterpret_cast<char*>(&byte), sizeof(byte)); // last bajt with some garbage
 	out_file.close();
 }
 
-void Huffman::decode(std::string in_file_name, std::string out_file_name)
+void Huffman::decode(std::string in_file_name, std::string out_file_name, const bool& grayscale)
 {
 	std::cout << "////////////////////////////////// " << std::endl;
 	std::cout << "//////     DEKOMPRESJA     /////// " << std::endl;
@@ -247,18 +282,34 @@ void Huffman::decode(std::string in_file_name, std::string out_file_name)
 			auto it = mapCode.find(map_key);
 			if (it != mapCode.end()) 
 			{
-				RGB[index_color++] = it->second;
-				if (index_color >= 3)
+				if (grayscale)
 				{
-					SDL_utils::draw_pixel(decoded_image, x++, y, RGB[0], RGB[1], RGB[2]);
-					if(x == huff_header.width)
+					RGB[0] = it->second;
+					SDL_utils::draw_pixel(decoded_image, x++, y, RGB[0], RGB[0], RGB[0]);
+					if (x == huff_header.width)
 					{
 						x = 0;
 						++y;
 					}
 					index_color = 0;
+
+					map_key = 1;
 				}
-				map_key = 1;
+				else
+				{
+					RGB[index_color++] = it->second;
+					if (index_color >= 3)
+					{
+						SDL_utils::draw_pixel(decoded_image, x++, y, RGB[0], RGB[1], RGB[2]);
+						if (x == huff_header.width)
+						{
+							x = 0;
+							++y;
+						}
+						index_color = 0;
+					}
+					map_key = 1;
+				}
 			}
 		}
 	}
@@ -318,6 +369,5 @@ void Huffman::returnCode(const shared_ptr_huff & root)
 		if (code.size() > size_map_code) // check max map size
 			size_map_code = code.size();
 
-			
 	}
 }
