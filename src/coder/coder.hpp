@@ -1,6 +1,7 @@
 #ifndef CODER_HPP___
 #define CODER_HPP___
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -66,12 +67,12 @@ public:
 	struct Header
 	{
 		uint16_t signature;
-		uint offset; // offset to data, should be 15(?) bytes
-		int width;
-		int height;
+		uint32_t offset; // offset to data, should be 15(?) bytes
+		int32_t width;
+		int32_t height;
 		bool grayscale; // 0 or 1
-		ushort compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
-		Header(const int& h, const int& w, const mode& compression_mode, const bool& grayscale_choice);
+		uint16_t compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
+		Header(const int32_t& h, const int32_t& w, const mode& compression_mode, const bool& grayscale_choice);
 		Header(SDL_Surface* image, const mode& compression_mode, const bool& grayscale_choice);
 		explicit Header(std::fstream& input);
 	};
