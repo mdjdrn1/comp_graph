@@ -209,7 +209,6 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 	pixels.erase(pixels.begin(), pixels.end() - pixels.size() % 3); // remove drew pixels
 }
 
-// TODO: temporary, just for current RLE without reading pixels from SDL_Surface
 /**
 * \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
 * \param pixel pixel that will be drawn
@@ -217,12 +216,12 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 * \param x width value for image
 * \param y heigth value for image
 */
-void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y) const
+void Coder::draw_pixels(SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y) const
 {
 	int left_to_draw = reps;
 	while (y < image.h && x < image.w && left_to_draw > 0)
 	{
-		draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixel[2], pixel[1], pixel[0]);
+		draw_pixel(&image, x, y, pixel[2], pixel[1], pixel[0]);
 		++x;
 		--left_to_draw;
 		if (x == image.w) // go to next line of image

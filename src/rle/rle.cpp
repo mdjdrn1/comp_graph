@@ -19,9 +19,9 @@ RLE::RLE() : Coder()
 
 void RLE::encode(const std::string& filename, const bool& grayscale)
 {
-	std::fstream file(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
-	if (!file.is_open())
-		throw Error("In RLE::encode(): couldn't open input convert file.");
+//	std::fstream file(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
+//	if (!file.is_open())
+//		throw Error("In RLE::encode(): couldn't open input convert file.");
 
 	// assuming filename is in correct format e.g. "path\\foo bar xyz.bmp"
 	std::fstream compressed(encoded_filename(filename).c_str(),
@@ -34,7 +34,7 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 	SDL_Surface_ptr image(new_bmp_surface(filename));
 	// create new header for coded file
 	Header bard_header(image.get(), RLE_EN, grayscale);
-	image.reset();
+//	image.reset();
 
 	compressed.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
 	compressed.seekg(bard_header.offset, std::ios_base::beg);
@@ -47,67 +47,78 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 	Pixel next, current;
 	uint8_t repetition = 1;
 
-	file.seekg(54, std::ios_base::beg); // set file to read after header
-
-
-	file.read((char*)&current, sizeof(Pixel)); // read first two pixeles
-	vcopy.push_back(current);
-	file.read((char*)&next, sizeof(Pixel));
-
-	while (!file.eof())
+//	file.seekg(54, std::ios_base::beg); // set file to read after header
+	int x = 0, y = 0;
+	current = get_pixel(image.get(), x++, y);
+	if(x == image->w)
 	{
-		if (compare(current, next))
-		{ // identical pixels
-			if (!vcopy.empty())
-			{// save vector to file
-				vcopy.pop_back(); // usun ostatni element - zostanie uwzglêdniony w tym powtorzeniu
-				compressed.write((char*)&vstart, sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
-				vsize = vcopy.size();
-				compressed.write((char*)&vsize, sizeof(vsize)); // ilosc elementow w sekwencji
-				for (int i = 0; i < vsize; i++) // wypisanie wektora
-					compressed.write((char*)&vcopy[i], sizeof(Pixel));
-				vcopy.clear(); // uwuniecie zawartosci
-			}
-			if (repetition < 255)
-				++repetition;
-			else
-			{ // gdy liczba powtorzen przekracza 255
-				compressed.write((char*)&repetition, sizeof(repetition));
-				compressed.write((char*)&current, sizeof(Pixel));
-				repetition = 2;
-			}
-		}
-		else
-		{ // gdy pixele sa rozne
-			if (repetition > 1)
-			{ // jesli pixele sie powtarzaly, wypisz je
-				compressed.write((char*)&repetition, sizeof(repetition));
-				compressed.write((char*)&current, sizeof(Pixel));
-			}
-			repetition = 1;
-			vsize = vcopy.size();
-			if (vsize < 255)
-			{
-				vcopy.push_back(next);
-			}
-			else
-			{ // jesli przekroczono limit nastapi zapis do pliku
-				compressed.write((char*)&vstart, sizeof(vstart));
-				vsize = vcopy.size();
-				compressed.write((char*)&vsize, sizeof(vsize));
-				for (int i = 0; i < vsize; i++)
-					compressed.write((char*)&vcopy[i], sizeof(Pixel));
-				vcopy.clear();
-				vcopy.push_back(next); // dodaj nowy element
-			}
-		}
+		x = 0;
+		++y;
+	}
+//	file.read((char*)&current, sizeof(Pixel)); // read first two pixeles
+	vcopy.push_back(current);
+//	next = get_pixel(image.get(), x++, y);
 
-		current = next;
-		file.read((char*)&next, sizeof(Pixel));
+	for (y; y < image->h; ++y)
+	{
+		for (x; x < image->w; ++x)
+		{
+//			if (x == image->w - 1 && y == image->h)
+//				break;
+			next = get_pixel(image.get(), x, y);
+
+			if (compare(current, next))
+			{ // identical pixels
+				if (!vcopy.empty())
+				{// save vector to file
+					vcopy.pop_back(); // usun ostatni element - zostanie uwzglêdniony w tym powtorzeniu
+					compressed.write((char*)&vstart, sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
+					vsize = vcopy.size();
+					compressed.write((char*)&vsize, sizeof(vsize)); // ilosc elementow w sekwencji
+					for (int i = 0; i < vsize; i++) // wypisanie wektora
+						compressed.write((char*)&vcopy[i], sizeof(Pixel));
+					vcopy.clear(); // uwuniecie zawartosci
+				}
+				if (repetition < 255)
+					++repetition;
+				else
+				{ // gdy liczba powtorzen przekracza 255
+					compressed.write((char*)&repetition, sizeof(repetition));
+					compressed.write((char*)&current, sizeof(Pixel));
+					repetition = 2;
+				}
+			}
+			else
+			{ // gdy pixele sa rozne
+				if (repetition > 1)
+				{ // jesli pixele sie powtarzaly, wypisz je
+					compressed.write((char*)&repetition, sizeof(repetition));
+					compressed.write((char*)&current, sizeof(Pixel));
+				}
+				repetition = 1;
+				vsize = vcopy.size();
+				if (vsize < 255)
+				{
+					vcopy.push_back(next);
+				}
+				else
+				{ // jesli przekroczono limit nastapi zapis do pliku
+					compressed.write((char*)&vstart, sizeof(vstart));
+					vsize = vcopy.size();
+					compressed.write((char*)&vsize, sizeof(vsize));
+					for (int i = 0; i < vsize; i++)
+						compressed.write((char*)&vcopy[i], sizeof(Pixel));
+					vcopy.clear();
+					vcopy.push_back(next); // dodaj nowy element
+				}
+			}
+
+			current = next;
+		}
 	}
 
 
-	if (file.eof() && !vcopy.empty())
+	if (!vcopy.empty())
 	{ // if end of file, write repetitions and Pixel to file
 		compressed.write((char*)&vstart, sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
 		vsize = vcopy.size();
@@ -122,7 +133,7 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 		compressed.write((char*)&current, sizeof(Pixel));
 	}
 
-	file.close();
+//	file.close();
 	compressed.close();
 }
 
@@ -144,8 +155,6 @@ void RLE::decode(const std::string& filename, const bool& grayscale)
 
 	while (!file.eof()) {
 		file.read((char*)&repetition, sizeof(repetition));	// read repetitions
-															//std::cout << " repetition :"<< (int)repetition << std::endl;
-															//file.read((char*)&current, sizeof(PIXEL));			// read pixel
 		if (file.eof()) break;
 		uint8_t count = 0;
 
@@ -156,8 +165,6 @@ void RLE::decode(const std::string& filename, const bool& grayscale)
 			{
 				file.read((char*)&current, sizeof(Pixel));
 				draw_pixels(*decoded_image, current, 1, x, y);
-
-//				ready.write((char*)&current, sizeof(Pixel));
 			}
 		}
 		else {

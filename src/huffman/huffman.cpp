@@ -100,9 +100,6 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 	huffman_header.countColor = countsColor;
 	huffman_header.size_map_code = size_map_code / 7 + 1; // as byte
 
-	std::cout << sizeof(header) << std::endl;
-	std::cout << sizeof(huffman_header) << std::endl;
-
 	//////////////////////////////
 	// Set header type
 	// Limit the size of header to a minimum 
@@ -242,7 +239,7 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 	short position = 0;
 	uint32_t map_key = 1;
 	ushort index_color = 0;
-	uint8_t RGB[3];
+	Pixel RGB;
 	while (!in_file.eof())
 	{
 		uint8_t color = 0;
@@ -258,14 +255,15 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 			{
 				if (grayscale)
 				{
-					RGB[0] = it->second;
-					draw_pixel(decoded_image.get(), x++, y, RGB[0], RGB[0], RGB[0]);
+					RGB = { it->second, it->second, it->second };
+					draw_pixels(*decoded_image, RGB, 1, x, y);
+//					draw_pixel(decoded_image.get(), x++, y, RGB[0], RGB[0], RGB[0]);
 //					draw_pixel(decoded_image, x++, y, RGB[0], RGB[0], RGB[0]);
-					if (x == header.width)
-					{
-						x = 0;
-						++y;
-					}
+//					if (x == header.width)
+//					{
+//						x = 0;
+//						++y;
+//					}
 					index_color = 0;
 
 					map_key = 1;
@@ -275,13 +273,8 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 					RGB[index_color++] = it->second;
 					if (index_color >= 3)
 					{
-						draw_pixel(decoded_image.get(), x++, y, RGB[0], RGB[1], RGB[2]);
-//						draw_pixel(decoded_image, x++, y, RGB[0], RGB[1], RGB[2]);
-						if (x == header.width)
-						{
-							x = 0;
-							++y;
-						}
+						std::swap(RGB[0], RGB[2]);
+						draw_pixels(*decoded_image, RGB, 1, x, y);
 						index_color = 0;
 					}
 					map_key = 1;
