@@ -1,6 +1,6 @@
 #include "error.hpp"
 
-std::fstream Error::error_log("error_log.txt", std::ios_base::out | std::ios_base::app);
+std::fstream Error::error_log("error_log.txt", std::ios_base::out | std::ios_base::trunc);
 
 Error::Error(const char* message) : Error(std::string(message))
 {

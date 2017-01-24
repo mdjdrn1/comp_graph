@@ -7,14 +7,13 @@
 using ConverterTuple = std::tuple<bool, std::string, Converter::mode, bool>;
 
 ConverterTuple get_data();
-void testConverter(const std::vector<std::string>& names, const Converter::mode& mode, unsigned number_of_tests);
 
 int main(int argc, char** argv)
 {
 	try
 	{
-		ConverterTuple convert_data = get_data();
 		Converter converter;
+		ConverterTuple convert_data = get_data();
 		if (std::get<0>(convert_data))
 			converter.encode(std::get<1>(convert_data), std::get<2>(convert_data), std::get<3>(convert_data));
 		else
@@ -103,6 +102,5 @@ ConverterTuple get_data()
 
 		grayscale_mode = (grayscale == 1);
 	}
-
 	return std::make_tuple(encoding, std::move(filename), algorithm_mode, grayscale_mode);
 }

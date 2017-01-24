@@ -14,7 +14,7 @@ public:
 	using DataVector = std::vector<uint8_t>; // bytes vector
 	using Pixel = Coder::Pixel;
 
-	Bitpack() = default;
+	Bitpack();// = default;
 	~Bitpack() = default;
 	Bitpack(const Bitpack&) = default;
 	Bitpack(Bitpack&&) = default;

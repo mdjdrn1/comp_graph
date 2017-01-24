@@ -1,6 +1,7 @@
 #ifndef CODER_HPP___
 #define CODER_HPP___
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -15,7 +16,8 @@
 class Coder
 {
 public:
-	virtual ~Coder() = default;
+	Coder();
+	virtual ~Coder();
 
 	// pure virtual methods
 	virtual void encode(const std::string& filename, const bool& grayscale) = 0;
@@ -40,10 +42,10 @@ protected:
 	using SDL_Surface_ptr = std::unique_ptr<SDL_Surface, Surface_deleter>;
 
 	// manipulate SDL_Surface
-	Pixel get_pixel(SDL_Surface* surface, const int& x, const int& y);
+	Pixel get_pixel(SDL_Surface* surface, const int& x, const int& y) const;
 	void draw_pixel(SDL_Surface* surface, const int& x, const int& y, const uint8_t& R, const uint8_t& G, const uint8_t& B) const;
-	void draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y, const bool& grayscale = false) const; // auxiliary method
-	void draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y) const; // auxiliary method
+	void draw_pixels(SDL_Surface& image, DataVector& pixels, int& x, int& y, const bool& grayscale = false) const; // auxiliary method
+	void draw_pixels(SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y) const; // auxiliary method
 
 	// manipulate Pixel
 	void to_7_bit(Pixel& pixel) const;
@@ -66,12 +68,12 @@ public:
 	struct Header
 	{
 		uint16_t signature;
-		uint offset; // offset to data, should be 15(?) bytes
-		int width;
-		int height;
+		uint8_t offset; // offset to data, should be 15(?) bytes
+		uint32_t width;
+		uint32_t height;
 		bool grayscale; // 0 or 1
-		ushort compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
-		Header(const int& h, const int& w, const mode& compression_mode, const bool& grayscale_choice);
+		uint8_t compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
+		Header(const int32_t& h, const int32_t& w, const mode& compression_mode, const bool& grayscale_choice);
 		Header(SDL_Surface* image, const mode& compression_mode, const bool& grayscale_choice);
 		explicit Header(std::fstream& input);
 	};
