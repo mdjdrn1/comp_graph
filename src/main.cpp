@@ -12,18 +12,12 @@ int main(int argc, char** argv)
 {
 	try
 	{
-//		ConverterTuple convert_data = get_data();
 		Converter converter;
-//		if (std::get<0>(convert_data))
-//			converter.encode(std::get<1>(convert_data), std::get<2>(convert_data), std::get<3>(convert_data));
-//		else
-//			converter.decode(std::get<1>(convert_data));
-
-			converter.encode("1.bmp", Coder::RLE_EN, false);
-			converter.decode("1.bard");
-			converter.encode("4.bmp", Coder::RLE_EN, false);
-			converter.decode("4.bard");
-
+		ConverterTuple convert_data = get_data();
+		if (std::get<0>(convert_data))
+			converter.encode(std::get<1>(convert_data), std::get<2>(convert_data), std::get<3>(convert_data));
+		else
+			converter.decode(std::get<1>(convert_data));
 	}
 	catch (const Error&)
 	{
@@ -108,6 +102,5 @@ ConverterTuple get_data()
 
 		grayscale_mode = (grayscale == 1);
 	}
-
 	return std::make_tuple(encoding, std::move(filename), algorithm_mode, grayscale_mode);
 }

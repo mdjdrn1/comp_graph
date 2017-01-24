@@ -19,10 +19,6 @@ RLE::RLE() : Coder()
 
 void RLE::encode(const std::string& filename, const bool& grayscale)
 {
-//	std::fstream file(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
-//	if (!file.is_open())
-//		throw Error("In RLE::encode(): couldn't open input convert file.");
-
 	// assuming filename is in correct format e.g. "path\\foo bar xyz.bmp"
 	std::fstream compressed(encoded_filename(filename).c_str(),
 	                        std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
@@ -34,7 +30,6 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 	SDL_Surface_ptr image(new_bmp_surface(filename));
 	// create new header for coded file
 	Header bard_header(image.get(), RLE_EN, grayscale);
-//	image.reset();
 
 	compressed.write(reinterpret_cast<char*>(&bard_header), sizeof(bard_header));
 	compressed.seekg(bard_header.offset, std::ios_base::beg);
@@ -47,44 +42,51 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 	Pixel next, current;
 	uint8_t repetition = 1;
 
-//	file.seekg(54, std::ios_base::beg); // set file to read after header
 	int x = 0, y = 0;
 	current = get_pixel(image.get(), x++, y);
+	if (grayscale)
+		to_gray(current);
 	if(x == image->w)
 	{
 		x = 0;
 		++y;
 	}
-//	file.read((char*)&current, sizeof(Pixel)); // read first two pixeles
 	vcopy.push_back(current);
-//	next = get_pixel(image.get(), x++, y);
 
 	for (y; y < image->h; ++y)
 	{
-		for (x; x < image->w; ++x)
+		for (x=0; x < image->w; ++x)
 		{
-//			if (x == image->w - 1 && y == image->h)
-//				break;
 			next = get_pixel(image.get(), x, y);
-
+			if (grayscale)
+				to_gray(next);
 			if (compare(current, next))
 			{ // identical pixels
 				if (!vcopy.empty())
 				{// save vector to file
 					vcopy.pop_back(); // usun ostatni element - zostanie uwzglêdniony w tym powtorzeniu
-					compressed.write((char*)&vstart, sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
+					compressed.write(reinterpret_cast<char*>(&vstart), sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
 					vsize = vcopy.size();
-					compressed.write((char*)&vsize, sizeof(vsize)); // ilosc elementow w sekwencji
+					compressed.write(reinterpret_cast<char*>(&vsize), sizeof(vsize)); // ilosc elementow w sekwencji
 					for (int i = 0; i < vsize; i++) // wypisanie wektora
-						compressed.write((char*)&vcopy[i], sizeof(Pixel));
+					{
+						if(!grayscale)
+							compressed.write(reinterpret_cast<char*>(&vcopy[i]), sizeof(Pixel));
+						else
+							compressed.write(reinterpret_cast<char*>(&vcopy[i][0]), sizeof(uint8_t));
+					}
 					vcopy.clear(); // uwuniecie zawartosci
 				}
 				if (repetition < 255)
 					++repetition;
 				else
 				{ // gdy liczba powtorzen przekracza 255
-					compressed.write((char*)&repetition, sizeof(repetition));
-					compressed.write((char*)&current, sizeof(Pixel));
+					compressed.write(reinterpret_cast<char*>(&repetition), sizeof(repetition));
+
+					if (!grayscale)
+						compressed.write(reinterpret_cast<char*>(&current), sizeof(Pixel));
+					else
+						compressed.write(reinterpret_cast<char*>(&current[0]), sizeof(uint8_t));
 					repetition = 2;
 				}
 			}
@@ -92,8 +94,11 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 			{ // gdy pixele sa rozne
 				if (repetition > 1)
 				{ // jesli pixele sie powtarzaly, wypisz je
-					compressed.write((char*)&repetition, sizeof(repetition));
-					compressed.write((char*)&current, sizeof(Pixel));
+					compressed.write(reinterpret_cast<char*>(&repetition), sizeof(repetition));
+					if (!grayscale)
+						compressed.write(reinterpret_cast<char*>(&current), sizeof(Pixel));
+					else
+						compressed.write(reinterpret_cast<char*>(&current[0]), sizeof(uint8_t));
 				}
 				repetition = 1;
 				vsize = vcopy.size();
@@ -103,11 +108,16 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 				}
 				else
 				{ // jesli przekroczono limit nastapi zapis do pliku
-					compressed.write((char*)&vstart, sizeof(vstart));
+					compressed.write(reinterpret_cast<char*>(&vstart), sizeof(vstart));
 					vsize = vcopy.size();
-					compressed.write((char*)&vsize, sizeof(vsize));
+					compressed.write(reinterpret_cast<char*>(&vsize), sizeof(vsize));
 					for (int i = 0; i < vsize; i++)
-						compressed.write((char*)&vcopy[i], sizeof(Pixel));
+					{
+						if (!grayscale)
+							compressed.write(reinterpret_cast<char*>(&vcopy[i]), sizeof(Pixel));
+						else
+							compressed.write(reinterpret_cast<char*>(&vcopy[i][0]), sizeof(uint8_t));
+					}
 					vcopy.clear();
 					vcopy.push_back(next); // dodaj nowy element
 				}
@@ -120,20 +130,27 @@ void RLE::encode(const std::string& filename, const bool& grayscale)
 
 	if (!vcopy.empty())
 	{ // if end of file, write repetitions and Pixel to file
-		compressed.write((char*)&vstart, sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
+		compressed.write(reinterpret_cast<char*>(&vstart), sizeof(vstart)); // 0 dla rozroznienia sekwencji od powtorzen
 		vsize = vcopy.size();
-		compressed.write((char*)&vsize, sizeof(vsize)); // ilosc elementow w sekwencji
+		compressed.write(reinterpret_cast<char*>(&vsize), sizeof(vsize)); // ilosc elementow w sekwencji
 		for (int i = 0; i < vsize; i++) // wypisanie wektora
-			compressed.write((char*)&vcopy[i], sizeof(Pixel));
+		{
+			if(!grayscale)
+				compressed.write(reinterpret_cast<char*>(&vcopy[i]), sizeof(Pixel));
+			else
+				compressed.write(reinterpret_cast<char*>(&vcopy[i][0]), sizeof(uint8_t));
+		}
 		vcopy.clear();
 	}
 	else
 	{
-		compressed.write((char*)&repetition, sizeof(repetition));
-		compressed.write((char*)&current, sizeof(Pixel));
+		compressed.write(reinterpret_cast<char*>(&repetition), sizeof(repetition));
+		if (!grayscale)
+			compressed.write(reinterpret_cast<char*>(&current), sizeof(Pixel));
+		else
+			compressed.write(reinterpret_cast<char*>(&current[0]), sizeof(uint8_t));
 	}
 
-//	file.close();
 	compressed.close();
 }
 
@@ -150,31 +167,42 @@ void RLE::decode(const std::string& filename, const bool& grayscale)
 	SDL_Surface_ptr decoded_image(new_empty_surface(bard_header.width, bard_header.height)); // creates surface for drawuing pixels (size header.width x header.height)
 	int x = 0, y = 0; // init current pixel (in surface) position
 
-	unsigned int repetition;// = 1;
+	uint8_t repetition;// = 1;
 	Pixel current;
 
 	while (!file.eof()) {
-		file.read((char*)&repetition, sizeof(repetition));	// read repetitions
+		file.read(reinterpret_cast<char*>(&repetition), sizeof(repetition));	// read repetitions
+		
 		if (file.eof()) break;
 		uint8_t count = 0;
 
 		if (repetition == 0)
 		{
-			file.read((char*)&count, sizeof(count));
+			file.read(reinterpret_cast<char*>(&count), sizeof(count));
 			for (unsigned int i = 0; i < count; i++)
 			{
-				file.read((char*)&current, sizeof(Pixel));
+				if(!grayscale)
+					file.read(reinterpret_cast<char*>(&current), sizeof(Pixel));
+				else
+				{
+					file.read(reinterpret_cast<char*>(&current[0]), sizeof(uint8_t));
+				}
+				current[1] = current[0];
+				current[2] = current[0];
 				draw_pixels(*decoded_image, current, 1, x, y);
 			}
 		}
 		else {
-			file.read((char*)&current, sizeof(Pixel));
+			if (!grayscale)
+				file.read(reinterpret_cast<char*>(&current), sizeof(Pixel));
+			else
+			{
+				file.read(reinterpret_cast<char*>(&current[0]), sizeof(uint8_t));
+			}
+			current[1] = current[0];
+			current[2] = current[0];
 
 			draw_pixels(*decoded_image, current, repetition, x, y);
-//			for (int j = 0; j < repetition; j++)				// write Pixel 'repetition' times
-//			{
-//				ready.write((char*)&current, sizeof(Pixel));
-//			}
 		}
 	}
 

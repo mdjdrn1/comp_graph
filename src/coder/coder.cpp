@@ -179,7 +179,7 @@ std::string Coder::decoded_filename(const std::string& input_filename) const
 * \param x width value for image
 * \param y heigth value for image
 */
-void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, int& y, const bool& grayscale) const
+void Coder::draw_pixels(SDL_Surface& image, DataVector& pixels, int& x, int& y, const bool& grayscale) const
 {
 	uint8_t* pixelptr = pixels.data(); // first pixels obj pointer
 	// then calculate how many pixels (from DataVector pixels) are available to draw in surface
@@ -221,7 +221,7 @@ void Coder::draw_pixels(SDL_Surface& image, const Pixel& pixel, const int& reps,
 	int left_to_draw = reps;
 	while (y < image.h && x < image.w && left_to_draw > 0)
 	{
-		draw_pixel(&image, x, y, pixel[2], pixel[1], pixel[0]);
+		draw_pixel(&image, x, y, pixel[0], pixel[1], pixel[2]);
 		++x;
 		--left_to_draw;
 		if (x == image.w) // go to next line of image

@@ -38,7 +38,6 @@ struct Huffman::node
 Huffman::node::node(uint8_t color, uint frequency)
 	: color(color), left(nullptr), right(nullptr), frequency(frequency)
 {
-	// ctor
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -56,7 +55,7 @@ Huffman::Huffman()
 //////////////////////////////////////////////////////////////////////////////////////////
 void Huffman::encode(const std::string& filename, const bool& grayscale)
 {
-	std::array<uint8_t, 3> arr;
+	Pixel arr;
 	uint frequencyColor[256]{};
 
 	// Read bmp file and count frequency of Color
@@ -65,10 +64,10 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 	for (int y = 0; y < pics->h; ++y)
 		for (int x = 0; x < pics->w; ++x)
 		{
-			arr = Coder::get_pixel(pics.get(), x, y);
+			arr = get_pixel(pics.get(), x, y);
 			if (grayscale)
 			{
-				Coder::to_gray(arr);
+				to_gray(arr);
 				++frequencyColor[arr[0]];
 			}
 			else
@@ -240,6 +239,8 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 	uint32_t map_key = 1;
 	ushort index_color = 0;
 	Pixel RGB;
+	//for (auto it = mapCode.begin(); it != mapCode.end(); ++it)
+	//	std::cout << (int)it->first << " " << (int)it->second << std::endl;
 	while (!in_file.eof())
 	{
 		uint8_t color = 0;
@@ -256,16 +257,14 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 				if (grayscale)
 				{
 					RGB = { it->second, it->second, it->second };
-					draw_pixels(*decoded_image, RGB, 1, x, y);
-//					draw_pixel(decoded_image.get(), x++, y, RGB[0], RGB[0], RGB[0]);
-//					draw_pixel(decoded_image, x++, y, RGB[0], RGB[0], RGB[0]);
-//					if (x == header.width)
-//					{
-//						x = 0;
-//						++y;
-//					}
-					index_color = 0;
 
+					// ************************************** //
+					std::cout << "gray " << grayscale << std::endl;
+			
+					// std::cout << (int)RGB[0] << std::endl;
+					// ************************************** //
+
+					draw_pixels(*decoded_image, RGB, 1, x, y);
 					map_key = 1;
 				}
 				else
@@ -273,7 +272,6 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 					RGB[index_color++] = it->second;
 					if (index_color >= 3)
 					{
-						std::swap(RGB[0], RGB[2]);
 						draw_pixels(*decoded_image, RGB, 1, x, y);
 						index_color = 0;
 					}
@@ -284,10 +282,7 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 	}
 	in_file.close();
 	if (SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()) < 0) // finally, save file to BMP extension
-//	if (SDL_SaveBMP(decoded_image, decoded_filename(filename).c_str()) < 0) // finally, save file to BMP extension
 		throw Error("In Huffman::decode(): failed saving decoded file.");
-//	SDL_FreeSurface(decoded_image);
-	// TODO: fix freesurface issue!
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
