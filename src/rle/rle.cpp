@@ -13,6 +13,10 @@ bool RLE::compare(const Pixel& pixel1, const Pixel& pixel2) const
 	return false;
 }
 
+RLE::RLE() : Coder()
+{
+}
+
 void RLE::encode(const std::string& filename, const bool& grayscale)
 {
 	std::fstream file(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded

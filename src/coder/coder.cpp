@@ -57,6 +57,17 @@ void Coder::draw_pixel(SDL_Surface* surface, const int& x, const int& y, const u
 	p[2] = (pixel >> 16) & 0xff;
 }
 
+Coder::Coder()
+{
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
+		throw Error ("In Coder::Coder: Unable to initialize SDL:");
+}
+
+Coder::~Coder()
+{
+	SDL_Quit();
+}
+
 /**
 * \brief Create new SDL_Surface from existing BMP file
 * \param filename BMP file name

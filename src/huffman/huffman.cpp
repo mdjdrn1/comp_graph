@@ -10,20 +10,14 @@
 #include "../coder/coder.hpp"
 #include "../error/error.hpp"
 
-//#if defined(_WIN32) || defined(_WIN64)
-//#include <SDL.h>
-//#elif defined(__unix__)
-//#include <SDL2/SDL.h>
-//#endif
-
 //////////////////////////////////////////////////////////////////////////////////////////
 
 #pragma pack(push, 1)
 struct Huffman::Huff_header
 {
-	ullong countColor; // quantity color channels
-	ushort size_map_code; // the largest size codes
-	ushort min_map_code = 32000; // the smalltest size codes
+	uint64_t countColor; // quantity color channels
+	uint16_t size_map_code; // the largest size codes
+	uint16_t min_map_code = 32000; // the smalltest size codes
 	bool headerType;
 };
 #pragma pack(pop)
@@ -49,7 +43,8 @@ Huffman::node::node(uint8_t color, uint frequency)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 Huffman::Huffman()
-	: compare([](const shared_ptr_huff& l, const shared_ptr_huff& r)
+	: Coder(),
+	compare([](const shared_ptr_huff& l, const shared_ptr_huff& r)
 		  {
 			  return (l->frequency > r->frequency);
 		  }),
@@ -104,6 +99,9 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 	Huff_header huffman_header;
 	huffman_header.countColor = countsColor;
 	huffman_header.size_map_code = size_map_code / 7 + 1; // as byte
+
+	std::cout << sizeof(header) << std::endl;
+	std::cout << sizeof(huffman_header) << std::endl;
 
 	//////////////////////////////
 	// Set header type

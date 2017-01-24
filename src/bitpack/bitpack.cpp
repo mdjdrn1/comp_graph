@@ -3,6 +3,10 @@
 #include <iterator>
 #include "../error/error.hpp"
 
+Bitpack::Bitpack() : Coder()
+{
+}
+
 /**
  * \brief Encoding method for 8-to-7 bits mode
  * \param filename input BMP file path

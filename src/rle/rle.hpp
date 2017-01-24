@@ -7,8 +7,8 @@ class RLE : public Coder
 {
 	bool compare(const Pixel& pixel1, const Pixel& pixel2) const;
 public:
-	RLE() = default;
-	virtual ~RLE() = default;
+	RLE();
+	~RLE() = default;
 	void encode(const std::string& filename, const bool& grayscale) override;
 	void decode(const std::string& filename, const bool& grayscale) override;
 };

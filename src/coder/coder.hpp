@@ -16,7 +16,8 @@
 class Coder
 {
 public:
-	virtual ~Coder() = default;
+	Coder();
+	virtual ~Coder();
 
 	// pure virtual methods
 	virtual void encode(const std::string& filename, const bool& grayscale) = 0;
@@ -67,11 +68,11 @@ public:
 	struct Header
 	{
 		uint16_t signature;
-		uint32_t offset; // offset to data, should be 15(?) bytes
-		int32_t width;
-		int32_t height;
+		uint8_t offset; // offset to data, should be 15(?) bytes
+		uint32_t width;
+		uint32_t height;
 		bool grayscale; // 0 or 1
-		uint16_t compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
+		uint8_t compression; // 0=BITPACK, 1=HUFFMAN, 2=RLE
 		Header(const int32_t& h, const int32_t& w, const mode& compression_mode, const bool& grayscale_choice);
 		Header(SDL_Surface* image, const mode& compression_mode, const bool& grayscale_choice);
 		explicit Header(std::fstream& input);
