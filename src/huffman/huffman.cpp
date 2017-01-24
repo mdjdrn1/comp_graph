@@ -17,6 +17,8 @@
 //#endif
 
 //////////////////////////////////////////////////////////////////////////////////////////
+
+#pragma pack(push, 1)
 struct Huffman::Huff_header
 {
 	ullong countColor; // quantity color channels
@@ -24,6 +26,7 @@ struct Huffman::Huff_header
 	ushort min_map_code = 32000; // the smalltest size codes
 	bool headerType;
 };
+#pragma pack(pop)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 struct Huffman::node
