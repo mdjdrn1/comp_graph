@@ -167,7 +167,8 @@ void Bitpack::decode(const std::string& filename, const bool& grayscale)
 
 	infile.close(); // finished reading. clean up
 
-	SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()); // finally, save file to BMP extension
+	if (SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()) < 0) // finally, save file to BMP extension
+		throw Error("In Bitpack::decode(): failed saving decoded file.");
 }
 
 /**

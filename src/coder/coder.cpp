@@ -25,7 +25,7 @@ void Coder::Surface_deleter::operator()(SDL_Surface* surface) const
 * \param y pos (indexing from 0)
 * \return 3-item array with RGB values
 */
-auto Coder::get_pixel(SDL_Surface* surface, const int& x, const int& y) -> Pixel
+auto Coder::get_pixel(SDL_Surface* surface, const int& x, const int& y) const -> Pixel
 {
 	int bpp = surface->format->BytesPerPixel;
 	Uint8* pixelPtr = static_cast<Uint8 *>(surface->pixels) + y * surface->pitch + x * bpp; // addres to pixel to get
@@ -64,7 +64,6 @@ void Coder::draw_pixel(SDL_Surface* surface, const int& x, const int& y, const u
 */
 SDL_Surface* Coder::new_bmp_surface(const std::string& filename) const
 {
-	// TODO: return unique_ptr
 	SDL_Surface* surface = SDL_LoadBMP(filename.c_str());
 	if (!surface)
 		throw Error("In Coder::new_bmp_surface(): Unable to load bitmap from file: " + filename + ".");
@@ -87,12 +86,12 @@ SDL_Surface* Coder::new_empty_surface(const int& width, const int& height) const
 	Uint32 Bmask = 0x000000ff; // blue mask for the pixels
 	Uint32 Amask = 0xff000000; // alpha mask for the pixels
 
-	SDL_Surface* surf = SDL_CreateRGBSurface(0, width, height, bit_depth, std::move(Rmask), std::move(Gmask), std::move(Bmask), std::move(Amask));
+	SDL_Surface* surface = SDL_CreateRGBSurface(0, width, height, bit_depth, Rmask, Gmask, Bmask, Amask);
 
-	if (!surf)
+	if (!surface)
 		throw Error("In Coder::new_empty_surface(): failed to create new surface.");
 
-	return surf;
+	return surface;
 }
 
 
@@ -199,7 +198,7 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 	pixels.erase(pixels.begin(), pixels.end() - pixels.size() % 3); // remove drew pixels
 }
 
-// TODO: temporary, just for RLE
+// TODO: temporary, just for current RLE without reading pixels from SDL_Surface
 /**
 * \brief Draw pixels into SDL_Surface image and cleans them up from 'pixels'
 * \param pixel pixel that will be drawn
@@ -210,7 +209,7 @@ void Coder::draw_pixels(const SDL_Surface& image, DataVector& pixels, int& x, in
 void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int& reps, int& x, int& y) const
 {
 	int left_to_draw = reps;
-	while (y >= 0 && x < image.w && left_to_draw > 0)
+	while (y < image.h && x < image.w && left_to_draw > 0)
 	{
 		draw_pixel(const_cast<SDL_Surface*>(&image), x, y, pixel[2], pixel[1], pixel[0]);
 		++x;
@@ -218,7 +217,7 @@ void Coder::draw_pixels(const SDL_Surface& image, const Pixel& pixel, const int&
 		if (x == image.w) // go to next line of image
 		{
 			x = 0;
-			--y;
+			++y;
 		}
 	}
 }

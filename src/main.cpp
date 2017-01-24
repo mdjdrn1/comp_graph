@@ -7,18 +7,23 @@
 using ConverterTuple = std::tuple<bool, std::string, Converter::mode, bool>;
 
 ConverterTuple get_data();
-void testConverter(const std::vector<std::string>& names, const Converter::mode& mode, unsigned number_of_tests);
 
 int main(int argc, char** argv)
 {
 	try
 	{
-		ConverterTuple convert_data = get_data();
+//		ConverterTuple convert_data = get_data();
 		Converter converter;
-		if (std::get<0>(convert_data))
-			converter.encode(std::get<1>(convert_data), std::get<2>(convert_data), std::get<3>(convert_data));
-		else
-			converter.decode(std::get<1>(convert_data));
+//		if (std::get<0>(convert_data))
+//			converter.encode(std::get<1>(convert_data), std::get<2>(convert_data), std::get<3>(convert_data));
+//		else
+//			converter.decode(std::get<1>(convert_data));
+
+			converter.encode("1.bmp", Coder::RLE_EN, false);
+			converter.decode("1.bard");
+			converter.encode("4.bmp", Coder::RLE_EN, false);
+			converter.decode("4.bard");
+
 	}
 	catch (const Error&)
 	{

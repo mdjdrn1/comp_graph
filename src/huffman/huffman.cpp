@@ -116,15 +116,15 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 	// Save if exist color channels
 	if (huffman_header.headerType)
 	{
-		out_file.write(reinterpret_cast<char*>(&size_codeRepresentation), sizeof(uint8));
+		out_file.write(reinterpret_cast<char*>(&size_codeRepresentation), sizeof(uint8_t));
 		for (int it = 0; it < 256; ++it)
 			if (codeRepresentation[it].size())
 			{
-				uint8 color = 0;
+				uint8_t color = 0;
 				for (int position = 0, i = codeRepresentation[it].size() - 1; i >= 0; --i , ++position)
 					color |= (codeRepresentation[it][i] << position);
-				out_file.write(reinterpret_cast<char*>(&color), sizeof(uint8));
-				out_file.write(reinterpret_cast<char*>(&it), sizeof(uint8));
+				out_file.write(reinterpret_cast<char*>(&color), sizeof(uint8_t));
+				out_file.write(reinterpret_cast<char*>(&it), sizeof(uint8_t));
 			}
 	}
 	// Save all color channels
@@ -138,10 +138,10 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 				for (int position = 0, i = codeRepresentation[it].size() - 1; i >= 0; --i , ++position)
 					color |= (codeRepresentation[it][i] << position);
 
-				out_file.write(reinterpret_cast<char*>(&color), sizeof(uint8) * huffman_header.size_map_code);
+				out_file.write(reinterpret_cast<char*>(&color), sizeof(uint8_t) * huffman_header.size_map_code);
 			}
 			else
-				out_file.write(reinterpret_cast<char*>(&(color = 0)), sizeof(uint8) * huffman_header.size_map_code);
+				out_file.write(reinterpret_cast<char*>(&(color = 0)), sizeof(uint8_t) * huffman_header.size_map_code);
 		}
 	}
 
@@ -192,7 +192,6 @@ void Huffman::encode(const std::string& filename, const bool& grayscale)
 //////////////////////////////////////////////////////////////////////////////////////////
 void Huffman::decode(const std::string& filename, const bool& grayscale)
 {
-	Huff_header huff_header;
 	std::fstream in_file(filename.c_str(), std::ios_base::in | std::ios_base::binary); // input (bard) file that will be encoded
 	if (!in_file.is_open())
 		throw Error("In Huffman::decode(): couldn't open input convert file.");
@@ -203,21 +202,22 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 	/////////////////////////////////////////////////////////////////////////
 	// Read huffman header from .bard file
 	/////////////////////////////////////////////////////////////////////////
+	Huff_header huff_header;
 	in_file.read(reinterpret_cast<char*>(&huff_header), sizeof(Huff_header));
 
 	// Map hold huffman code each color channels
-	std::map<uint32_t, uint8> mapCode;
+	std::map<uint32_t, uint8_t> mapCode;
 
 	// Read if exist color channels
 	if (huff_header.headerType)
 	{
 		ushort it;
-		in_file.read(reinterpret_cast<char*>(&it), sizeof(uint8));
+		in_file.read(reinterpret_cast<char*>(&it), sizeof(uint8_t));
 		while (it--)
 		{
-			uint8 position, color;
-			in_file.read(reinterpret_cast<char*>(&color), sizeof(uint8));
-			in_file.read(reinterpret_cast<char*>(&position), sizeof(uint8));
+			uint8_t position, color;
+			in_file.read(reinterpret_cast<char*>(&color), sizeof(uint8_t));
+			in_file.read(reinterpret_cast<char*>(&position), sizeof(uint8_t));
 			mapCode.insert({color, position});
 		}
 	}
@@ -226,7 +226,7 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 		for (ushort it = 0; it < 256; ++it)
 		{
 			uint32_t color;
-			in_file.read(reinterpret_cast<char*>(&color), sizeof(uint8) * huff_header.size_map_code);
+			in_file.read(reinterpret_cast<char*>(&color), sizeof(uint8_t) * huff_header.size_map_code);
 			if (color)
 				mapCode.insert({color, it});
 		}
@@ -235,6 +235,7 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 	// Read encoded data from .bard file
 	/////////////////////////////////////////////////////////////////////////
 	SDL_Surface_ptr decoded_image(new_empty_surface(header.width, header.height));
+//	SDL_Surface* decoded_image(new_empty_surface(header.width, header.height));
 	int x = 0, y = 0;
 
 	short position = 0;
@@ -258,6 +259,7 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 				{
 					RGB[0] = it->second;
 					draw_pixel(decoded_image.get(), x++, y, RGB[0], RGB[0], RGB[0]);
+//					draw_pixel(decoded_image, x++, y, RGB[0], RGB[0], RGB[0]);
 					if (x == header.width)
 					{
 						x = 0;
@@ -273,6 +275,7 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 					if (index_color >= 3)
 					{
 						draw_pixel(decoded_image.get(), x++, y, RGB[0], RGB[1], RGB[2]);
+//						draw_pixel(decoded_image, x++, y, RGB[0], RGB[1], RGB[2]);
 						if (x == header.width)
 						{
 							x = 0;
@@ -285,7 +288,12 @@ void Huffman::decode(const std::string& filename, const bool& grayscale)
 			}
 		}
 	}
-	SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()); // finally, save file to BMP extension
+	in_file.close();
+	if (SDL_SaveBMP(decoded_image.get(), decoded_filename(filename).c_str()) < 0) // finally, save file to BMP extension
+//	if (SDL_SaveBMP(decoded_image, decoded_filename(filename).c_str()) < 0) // finally, save file to BMP extension
+		throw Error("In Huffman::decode(): failed saving decoded file.");
+//	SDL_FreeSurface(decoded_image);
+	// TODO: fix freesurface issue!
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
