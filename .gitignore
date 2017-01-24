@@ -297,7 +297,5 @@ __pycache__/
 # tools/
 
 # Solution files
- *.sln
- *.vcxproj
-src/RLE.h
-src/RLE2.cpp
+*.sln
+*.vcxproj
