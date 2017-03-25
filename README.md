@@ -1,9 +1,42 @@
 # Computer Graphics project
 
+## BARD format
+BARD is file format for compressed BMP files. Compression is performed using one of three algorithms: RLE, Huffman or 8-to-7 bits.
+
+### BARD file stucture
+|	Structure name 	| Optional	| Size	| Purpose	|
+| ------------- |------------- | ------------- | -------------| 
+| (Main) File header     | No | 13 bytes | Contains informations about type of conversion |
+| Huffman header      | Yes      |   13 bytes | Contains informations for Huffman algorithm conversion  |
+| Pixels array | No      |    Dependent of file | Contains data (pixels' values) |
+
+### File header structure
+|Offset | Name | Size | Data type | Purpose|
+| ------------- |------------- | ------------- | -------------| -------------|
+|0|signature|2 bytes|uint16_t|BARD file identifier|
+|2|offset|1 byte|uint8_t|Offset to data (pixels array). However in Huffman coded file - it's offset to Huffman header.|
+|3|width|4 bytes|uint32_t|Image width in pixels.|
+|7|height|4 bytes|uint32_t|Image height in pixels.|
+|11|grayscale|1 byte|bool|Contains information, if file is coded in grayscale.|
+|12|conversion type|uint8_t|unsigned int|Contains information about used algorithm: 0=8-to-7 bits, 1=Huffman, 2=RLE. |
+
+### Huffman header structure
+|Offset | Name | Size | Data type | Purpose|
+| ------------- |------------- | ------------- | -------------| -------------|
+|0|channels|8 bytes|uint64_t|Contains amount of coded channels.|
+|8|max length of item in map|2 bytes|uint16_t|Contains max length of items in codes map. |
+|9|type|1 byte|uint8_t|Describes, how Huffman codes are saved in header.|
+
+## Grayscale
+Every compression algorithm allows you to convert file using only "grayscale" colors. To calculate value of "grayscale" pixel, there is used YUV color space. After computations value of every channel is equal to 0,299*R + 0,587*G + 0,114*B. That allows our algorithms to skip two channels during saving file to BARD format. 
+E.g. compression with 8-to-7 bit algorithm gives you output **BARD** file with size equal to about **87,5% of original BMP file**. With grayscale, result is much better - output BARD file has size equal to only about **29,2% of original BMP file**!
+
+___
+
+
 ## Requirements
 + C++ compiler (tested on g++, gcc, visual C++ compiler )
 + SDL v2.x
-
 
 ## Running SDL2 program on Linux
 **Recommended** for:
